@@ -1,0 +1,6 @@
+# Core requirements for using this application
+-c constraints.txt
+
+Django>=1.8,<2.0           # Web application framework
+cssselect>=1.0.3           # Translate CSS selectors to XPath
+lxml==3.4.4
