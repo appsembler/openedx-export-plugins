@@ -3,11 +3,11 @@ Define an Exporter Plugin class providing
 additional options to xmodule lib ExportManager
 """
 
-import os
-
 from lxml import etree
 
 from xmodule.modulestore import xml_exporter
+
+from . import resolvers
 
 
 class PluggableCourseExportManager(xml_exporter.CourseExportManager):
@@ -59,62 +59,11 @@ class PluggableCourseExportManager(xml_exporter.CourseExportManager):
         Perform XSLT transform of export output using XSL stylesheet.
         """
         parser = etree.XMLParser(recover=True)  # use a forgiving parser, OLX is messy
-        parser.resolvers.add(ExportFSResolver(export_fs))
-        parser.resolvers.add(PyLocalXSLResolver())
+        parser.resolvers.add(resolvers.ExportFSResolver(export_fs))
+        parser.resolvers.add(resolvers.PyLocalXSLResolver())
         xsl_sheet = self._load_export_xsl()
         xslt_root = etree.XML(xsl_sheet, parser)
         transform = etree.XSLT(xslt_root)
         result_tree = transform(root)
         print(str(result_tree))
         return result_tree
-
-
-class PyLocalXSLResolver(etree.Resolver):
-    """
-    Resolve URL lookups relative to this Python module directory.
-    """
-    def resolve(self, url, id, context):
-        if not url.startswith('pylocal:'):
-            return None   # move on to next Resolver
-
-        path = os.path.join(os.path.dirname(__file__), 'xsl', url.replace('pylocal:',''))        
-        if os.path.exists(path):
-            return self.resolve_filename(path, context)
-        else:
-            print ("can't resolve url {}. returning empty document".format(url))
-            return self.resolve_empty(context)
-
-
-class ExportFSResolver(etree.Resolver):
-    """
-    Resolve xsl:document() URL lookups to local tempory FS files
-    """
-    def __init__(self, fs):
-        self.fs = fs
-        super(ExportFSResolver, self).__init__()
-
-    def resolve(self, url, id, context):
-        print("Resolving URL {}".format(url))
-        if not url.startswith('tmpfs:'):
-            return None   # move on to next Resolver
-
-        path = self.fs.getsyspath(url.replace('tmpfs:','',1))
-        if os.path.exists(path):
-            # TODO: maybe move this into some error handling code
-            try:
-                if '.html' in path:
-                    # we have to turn it into proper XHTML
-                    # mostly they are invalid fragments without enclosing <html>
-                    with open(path) as f:
-                        contents = f.read()
-                        html_tree = etree.HTML(contents)
-                        return self.resolve_string(etree.tostring(html_tree), context)
-                else:
-                        etree.parse(path)  # validate parseability
-                        return self.resolve_filename(path, context)
-            except etree.ParseError as e:
-                print("Refusing to load a malformed document {} with error {}.  Returning empty document".format(url, e.message))
-                return self.resolve_empty(context)
-        else:
-            print ("can't resolve url {}. returning empty document".format(url))
-            return self.resolve_empty(context)

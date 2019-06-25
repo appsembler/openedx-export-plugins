@@ -39,7 +39,7 @@ class Command(BaseCommand):
 
         course_id = options['course_id']
         target_dir = os.path.normpath(course_id)
-        
+
         try:
             course_key = CourseKey.from_string(course_id)
         except InvalidKeyError:

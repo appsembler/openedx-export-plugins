@@ -6,7 +6,7 @@ from lxml import etree
 import json
 import os
 
-from . import base
+from . import base, resolvers
 
 
 class MarkdownCourseExportManager(base.PluggableCourseExportManager):
@@ -37,8 +37,8 @@ class MarkdownCourseExportManager(base.PluggableCourseExportManager):
         Perform XSLT transform of export output using XSL stylesheet.
         """
         parser = etree.XMLParser(recover=True)  # use a forgiving parser, OLX is messy
-        parser.resolvers.add(base.ExportFSResolver(export_fs))
-        parser.resolvers.add(base.PyLocalXSLResolver())
+        parser.resolvers.add(resolvers.ExportFSResolver(export_fs))
+        parser.resolvers.add(resolvers.PyLocalXSLResolver())
         parser.resolvers.add(ExportFSAssetsFileResolver(export_fs))
         xsl_sheet = self._load_export_xsl()
         xslt_root = etree.XML(xsl_sheet, parser)
@@ -48,7 +48,7 @@ class MarkdownCourseExportManager(base.PluggableCourseExportManager):
         return result_tree
 
 
-class ExportFSAssetsFileResolver(base.ExportFSResolver):
+class ExportFSAssetsFileResolver(resolvers.ExportFSResolver):
     """
     Resolve assets.json file using custom parsing
     """
