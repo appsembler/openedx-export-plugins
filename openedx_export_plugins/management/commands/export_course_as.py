@@ -5,6 +5,7 @@ If <filename> is '-', it pipes the file to stdout.
 """
 
 import os
+import shutil
 from tempfile import mkdtemp, mktemp
 from textwrap import dedent
 
@@ -54,21 +55,22 @@ class Command(BaseCommand):
             self.stderr.write("Course export plugin with the name {} not found".format(plugin_name))
 
         filename = options['output']
-        pipe_results = False
-        if filename is None:
-            filename = mktemp()
-            pipe_results = True
 
         exporter = plugin_class(modulestore(), contentstore(), course_key, root_dir, target_dir)
         exporter.export()
 
-        results = self._get_results(filename) if pipe_results else None
+        # read results from tmp output.md, write results to stdout or filename, if passed
+        results = self._get_results(root_dir, target_dir)
+        if filename:
+            with open(filename, "w") as outfile:
+                outfile.write(results)
+        else:
+            self.stdout.write(results, ending="")
 
-        self.stdout.write(results, ending="")
-
-    def _get_results(self, filename):
+    def _get_results(self, root_dir, target_dir):
         """Load results from file"""
-        with open(filename) as f:
+        tmp_output_path = os.path.join(root_dir, target_dir, "output.md")
+        with open(tmp_output_path) as f:
             results = f.read()
-            os.remove(filename)
+        shutil.rmtree(root_dir)
         return results
