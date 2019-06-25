@@ -44,7 +44,7 @@ class MarkdownCourseExportManager(base.PluggableCourseExportManager):
         xslt_root = etree.XML(xsl_sheet, parser)
         transform = etree.XSLT(xslt_root)
         result_tree = transform(root)
-        print(str(result_tree))
+        # print(str(result_tree))
         return result_tree
 
 
@@ -53,7 +53,7 @@ class ExportFSAssetsFileResolver(resolvers.ExportFSResolver):
     Resolve assets.json file using custom parsing
     """
     def resolve(self, url, id, context):
-        print("Resolving assets URL {}".format(url))
+        # print("Resolving assets URL {}".format(url))
         if not url.startswith('assets:'):
             return None   # move on to next Resolver
 

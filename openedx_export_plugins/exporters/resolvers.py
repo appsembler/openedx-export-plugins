@@ -32,7 +32,7 @@ class ExportFSResolver(etree.Resolver):
         super(ExportFSResolver, self).__init__()
 
     def resolve(self, url, id, context):
-        print("Resolving URL {}".format(url))
+        # print("Resolving URL {}".format(url))
         if not url.startswith('tmpfs:'):
             return None   # move on to next Resolver
 
@@ -51,8 +51,8 @@ class ExportFSResolver(etree.Resolver):
                         etree.parse(path)  # validate parseability
                         return self.resolve_filename(path, context)
             except etree.ParseError as e:
-                print("Refusing to load a malformed document {} with error {}.  Returning empty document".format(url, e.message))
+                # print("Refusing to load a malformed document {} with error {}.  Returning empty document".format(url, e.message))
                 return self.resolve_empty(context)
         else:
-            print ("can't resolve url {}. returning empty document".format(url))
+            # print ("can't resolve url {}. returning empty document".format(url))
             return self.resolve_empty(context)
