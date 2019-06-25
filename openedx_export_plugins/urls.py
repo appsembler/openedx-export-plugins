@@ -4,9 +4,13 @@ URLs for openedx_export_plugins.
 """
 from __future__ import absolute_import, unicode_literals
 
-from django.conf.urls import url
-from django.views.generic import TemplateView
+from django.conf.urls import patterns, url
 
-urlpatterns = [
-    url(r'', TemplateView.as_view(template_name="openedx_export_plugins/base.html")),
-]
+from lms.envs.common import COURSE_KEY_PATTERN
+
+
+urlpatterns = patterns(
+    '',
+    url(r'^export/{}/(?P<plugin_name>.*)$'.format(COURSE_KEY_PATTERN),
+        'openedx_export_plugins.views.plugin_export_handler'),
+)

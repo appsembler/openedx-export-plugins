@@ -18,7 +18,6 @@ from openedx.core.lib.api import plugins
 from xmodule.contentstore.django import contentstore
 from xmodule.modulestore.django import modulestore
 
-
 from openedx_export_plugins.plugins import CourseExporterPluginManager
 
 
