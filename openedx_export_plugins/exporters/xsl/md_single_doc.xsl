@@ -65,7 +65,7 @@
 <xsl:template match="*[@course]">
 <root>
 # <xsl:value-of select="dyn:evaluate('document(concat(&quot;tmpfs:course/&quot;, @url_name, &quot;.xml&quot;))')//course/@display_name"/>
-*<xsl:value-of select="./@course"/> / <xsl:value-of select="./@org"/> / <xsl:value-of select="./@url_name"/>*
+*<xsl:value-of select="./@org"/> / <xsl:value-of select="./@course"/> / <xsl:value-of select="./@url_name"/>*
 <xsl:apply-templates select="document('tmpfs:about/overview.html')//section[@class='about']"/>
 <xsl:apply-templates select="document('tmpfs:about/short_description.html')//section"/>
 <xsl:apply-templates select="document('tmpfs:about/overview.html')//section[@class='prerequisites']"/>
