@@ -53,7 +53,8 @@
 [-] translate URLS for images and hrefs
 [] maybe: don't reprint subheadings for verticals if same display_name as sequential
 [] handle <table> tags in html
-[] handle handouts
+[x] handle handouts
+[x handle updates
 [x] handle tabs
 
 -->  
@@ -67,9 +68,11 @@
 *<xsl:value-of select="./@course"/> / <xsl:value-of select="./@org"/> / <xsl:value-of select="./@url_name"/>*
 <xsl:apply-templates select="document('tmpfs:about/overview.html')//section[@class='about']"/>
 <xsl:apply-templates select="document('tmpfs:about/short_description.html')//section"/>
-<xsl:apply-templates select="document('tmpfs:about/overview.html')//section[@class='prerequisites']"/>        
+<xsl:apply-templates select="document('tmpfs:about/overview.html')//section[@class='prerequisites']"/>
+<xsl:call-template name="updates"/>
 <xsl:apply-templates select="dyn:evaluate('document(concat(&quot;tmpfs:course/&quot;, @url_name, &quot;.xml&quot;))')"/>
 <xsl:apply-templates select="document('tabs:policies/course/policy.json')"/>
+<xsl:call-template name="handouts"/>
 <xsl:call-template name="assets"/>
 </root>
 </xsl:template>
@@ -118,6 +121,24 @@
   <xsl:template match="problem//script|answer[@type='loncapa/python']" />
 
   <xsl:template match="html//table">[HTML TABLE not displayed]</xsl:template><!-- drop tables for now -->
+
+
+
+<xsl:template name="updates">
+<xsl:text>----
+### UPDATES
+
+</xsl:text>
+<xsl:apply-templates select="document('tmpfs:info/updates.html')" />
+</xsl:template>
+
+<xsl:template name="handouts">
+<xsl:text>----
+### HANDOUTS
+
+</xsl:text>
+<xsl:apply-templates select="document('tmpfs:info/handouts.html')" />
+</xsl:template>
 
 <xsl:template name="assets">
 <!-- output parsed assets JSON file -->
