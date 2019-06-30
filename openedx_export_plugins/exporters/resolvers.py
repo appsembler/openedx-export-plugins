@@ -2,9 +2,12 @@
 XML Resolvers for lxml.etree
 """
 
+import json
 import os
 
 from lxml import etree
+
+from django.utils.translation import ugettext as _
 
 
 class PyLocalXSLResolver(etree.Resolver):
@@ -19,7 +22,7 @@ class PyLocalXSLResolver(etree.Resolver):
         if os.path.exists(path):
             return self.resolve_filename(path, context)
         else:
-            print ("can't resolve url {}. returning empty document".format(url))
+            # print ("can't resolve url {}. returning empty document".format(url))
             return self.resolve_empty(context)
 
 
@@ -55,4 +58,39 @@ class ExportFSResolver(etree.Resolver):
                 return self.resolve_empty(context)
         else:
             # print ("can't resolve url {}. returning empty document".format(url))
+            return self.resolve_empty(context)
+
+
+class ExportFSPolicyTabsJSONResolver(ExportFSResolver):
+    """
+    Resolve tabs from url_slug value in policies/course/policy.json file using custom parsing
+    """
+    def resolve(self, url, id, context):
+        if not url.startswith('tabs:'):
+            return None   # move on to next Resolver
+
+        path = self.fs.getsyspath(url.replace('tabs:', '', 1))
+
+        if os.path.exists(path):
+            with open(path) as f:
+                policy_json = json.load(f)
+                try:
+                    # we only care about tabs that have a url_name and aren't course staff only
+                    policy_tabs = policy_json['course/course']['tabs']
+                    print policy_tabs
+                    tabs = [tab for tab in policy_tabs if 'url_slug' in tab.keys() and not tab['course_staff_only']]
+                except KeyError:
+                    return self.resolve_empty(context)
+                if tabs:
+                    # resolver can't return multiple filenames out of
+                    #  policy.json so we have to call another resolver on each
+                    tabs_xml = _("<h1>Additional Course Pages</h1>")
+                    for tab in tabs:
+                        # docs_xsl += "<xsl:apply-templates select=\"document('tmpfs:tabs/{}.html')\"/>".format(tab['url_slug'])
+                        with open(os.path.join(self.fs.getsyspath('tabs'), '{}.html'.format(tab['url_slug']))) as html:
+                            tabs_xml += "\n<h2>{}</h2>".format(tab['name']) + '\n' + html.read() + "<hr/>"
+                    return self.resolve_string("<xml>{}</xml>".format(tabs_xml), context)
+                else:
+                    return self.resolve_empty(context)
+        else:
             return self.resolve_empty(context)

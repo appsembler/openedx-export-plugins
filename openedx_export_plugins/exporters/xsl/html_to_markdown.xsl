@@ -97,5 +97,8 @@
   <xsl:template match="h5">######<xsl:text> </xsl:text><xsl:apply-templates select="*|text()" /></xsl:template>
   <xsl:template match="h6">#######<xsl:text> </xsl:text><xsl:apply-templates select="*|text()" /></xsl:template>  
   
+  <xsl:template match="head" />
+  <xsl:template match="body"><xsl:apply-templates select="*" /></xsl:template>
+  <xsl:template match="script" />
 
 </xsl:stylesheet>

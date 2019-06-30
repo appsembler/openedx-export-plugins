@@ -40,6 +40,7 @@ class MarkdownCourseExportManager(base.PluggableCourseExportManager):
         parser.resolvers.add(resolvers.ExportFSResolver(export_fs))
         parser.resolvers.add(resolvers.PyLocalXSLResolver())
         parser.resolvers.add(ExportFSAssetsFileResolver(export_fs))
+        parser.resolvers.add(resolvers.ExportFSPolicyTabsJSONResolver(export_fs))
         xsl_sheet = self._load_export_xsl()
         xslt_root = etree.XML(xsl_sheet, parser)
         transform = etree.XSLT(xslt_root)
@@ -83,6 +84,8 @@ class ExportFSAssetsFileResolver(resolvers.ExportFSResolver):
                 new_dict[val['supertype']].append(val['name'])
 
             ret_str = ""
+            # TODO: this resolver doesn't have to be markdown-specific
+            # if we can make the return string more generic
             for key in new_dict.keys():
                 ret_str += "\n\n#### {}\n* ".format(key)
                 ret_str += "\n* ".join(sorted(new_dict[key]))

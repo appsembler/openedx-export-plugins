@@ -54,7 +54,7 @@
 [] maybe: don't reprint subheadings for verticals if same display_name as sequential
 [] handle <table> tags in html
 [] handle handouts
-[] handle tabs
+[x] handle tabs
 
 -->  
 
@@ -69,6 +69,7 @@
 <xsl:apply-templates select="document('tmpfs:about/short_description.html')//section"/>
 <xsl:apply-templates select="document('tmpfs:about/overview.html')//section[@class='prerequisites']"/>        
 <xsl:apply-templates select="dyn:evaluate('document(concat(&quot;tmpfs:course/&quot;, @url_name, &quot;.xml&quot;))')"/>
+<xsl:apply-templates select="document('tabs:policies/course/policy.json')"/>
 <xsl:call-template name="assets"/>
 </root>
 </xsl:template>
