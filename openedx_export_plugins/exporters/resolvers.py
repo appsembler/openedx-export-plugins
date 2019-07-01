@@ -88,8 +88,8 @@ class ExportFSPolicyTabsJSONResolver(ExportFSResolver):
                     for tab in tabs:
                         # docs_xsl += "<xsl:apply-templates select=\"document('tmpfs:tabs/{}.html')\"/>".format(tab['url_slug'])
                         with open(os.path.join(self.fs.getsyspath('tabs'), '{}.html'.format(tab['url_slug']))) as html:
-                            tabs_xml += "\n<h2>{}</h2>".format(tab['name']) + '\n' + html.read() + "<hr/>"
-                    return self.resolve_string("<xml>{}</xml>".format(tabs_xml), context)
+                            tabs_xml += u"\n<h2>{}</h2>".format(tab['name']) + '\n' + html.read() + "<hr/>"
+                    return self.resolve_string(u"<xml>{}</xml>".format(tabs_xml), context)
                 else:
                     return self.resolve_empty(context)
         else:
