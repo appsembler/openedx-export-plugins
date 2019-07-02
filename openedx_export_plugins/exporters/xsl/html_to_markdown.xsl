@@ -55,7 +55,7 @@
     <xsl:value-of select="@alt" />
     <xsl:text>](</xsl:text>
     <xsl:value-of select="@src" />
-    <xsl:text>)</xsl:text>
+    <xsl:text>) </xsl:text>
   </xsl:template>
 
 
@@ -100,5 +100,6 @@
   <xsl:template match="head" />
   <xsl:template match="body"><xsl:apply-templates select="*" /></xsl:template>
   <xsl:template match="script" />
+  <xsl:template match="comment()" />
 
 </xsl:stylesheet>

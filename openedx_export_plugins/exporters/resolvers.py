@@ -57,7 +57,8 @@ class ExportFSResolver(etree.Resolver):
                 # print("Refusing to load a malformed document {} with error {}.  Returning empty document".format(url, e.message))
                 return self.resolve_empty(context)
         else:
-            # print ("can't resolve url {}. returning empty document".format(url))
+            # component nodes will have url_names even if all information is stored as attributes
+            # on the node so this resolver will not find a matching file
             return self.resolve_empty(context)
 
 
