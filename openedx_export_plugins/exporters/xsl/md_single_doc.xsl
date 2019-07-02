@@ -102,10 +102,19 @@
   </xsl:template>
 
   <xsl:template match="vertical/*[@url_name]"><!-- resolve to file contents matching @url_name or if no file, match node -->
-      <xsl:variable name="componentFile" select="dyn:evaluate('document(concat(&quot;tmpfs:&quot;, local-name(), &quot;/&quot;, @url_name, &quot;.xml&quot;))')" />
-      <xsl:choose>
-        <xsl:when test="string-length($componentFile)!=0">
-          <xsl:apply-templates select="$componentFile"/>
+      <xsl:if test="local-name() != 'html'">
+        <xsl:call-template name="nonFileComponent">
+          <xsl:with-param name="nodeType"><xsl:value-of select="local-name()" /></xsl:with-param>
+        </xsl:call-template> 
+      </xsl:if>
+      <xsl:apply-templates select="dyn:evaluate('document(concat(&quot;tmpfs:&quot;, local-name(), &quot;/&quot;, @url_name, &quot;.xml&quot;))')" />
+<!--      <xsl:variable name="componentFile" select="dyn:evaluate('document(concat(&quot;tmpfs:&quot;, local-name(), &quot;/&quot;, @url_name, &quot;.xml&quot;))')" />
+      path: <xsl:value-of select="concat(&quot;tmpfs:&quot;, local-name(), &quot;/&quot;, @url_name, &quot;.xml&quot;)"/>
+      componentFile: <xsl:value-of select="$componentFile" />foo <xsl:text>&#10;</xsl:text>
+
+       <xsl:choose>
+        <xsl:when test="$componentFile">
+          <xsl:apply-templates select="$componentFile" />
         </xsl:when>
         <xsl:otherwise>
           <xsl:call-template name="nonFileComponent">
@@ -113,6 +122,8 @@
           </xsl:call-template> 
         </xsl:otherwise>
       </xsl:choose>
+ -->      
+
   </xsl:template>
 
   <xsl:template match="html[@filename]"><!-- process the actual .html file for html components -->
