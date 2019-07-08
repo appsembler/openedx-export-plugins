@@ -2,12 +2,15 @@
 <xsl:stylesheet
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:dyn="http://exslt.org/dynamic"
-    extension-element-prefixes="dyn"
+    xmlns:str="http://exslt.org/strings"
+    extension-element-prefixes="dyn str"
     version="1.0">
 
   <xsl:include href="pylocal:html_to_markdown.xsl" />
+
   <xsl:output method="text" encoding="utf-8" indent="no"/>
   <xsl:preserve-space elements="*"/>
+  <xsl:variable name="APOS">'</xsl:variable>
 
 
   <xsl:template name="mdHeading">
@@ -58,7 +61,7 @@
 [x] handle handouts
 [x handle updates
 [x] handle tabs
-[] handle custom xblocks
+[-] handle custom xblocks
 [] wrap visible_to_staff_only blocks with italics
 [] wrap sequentials with prereqs prereq blocks with italics
 
@@ -78,7 +81,7 @@
 <xsl:apply-templates select="dyn:evaluate('document(concat(&quot;tmpfs:course/&quot;, @url_name, &quot;.xml&quot;))')"/>
 <xsl:apply-templates select="document('tabs:policies/course/policy.json')"/>
 <xsl:call-template name="handouts"/>
-<!-- <xsl:call-template name="assets"/> -->
+<xsl:call-template name="assets"/>
 </root>
 </xsl:template>
 
@@ -147,20 +150,36 @@
   video source [<xsl:value-of select="@src" />](<xsl:value-of select="@src" />))
 </xsl:template>  
 
+<xsl:template name="choiceCorrectness">
+  <xsl:choose>
+    <xsl:when test="@correct = 'true'">X</xsl:when>
+    <xsl:otherwise><xsl:text> </xsl:text></xsl:otherwise> 
+  </xsl:choose>
+</xsl:template>  
+
 <xsl:template match="multiplechoiceresponse//choice">
-  <xsl:text>* [ ] </xsl:text> <xsl:value-of select="./text()" />
+  * [<xsl:call-template name="choiceCorrectness"/>] <xsl:value-of select="./text()" />
 </xsl:template>
 
-<xsl:template match="optionresponse//optioninput/@options">
-  <xsl:text>* [ ] </xsl:text> <xsl:value-of select="." /><!-- TODO:split the py string -->
+<xsl:template match="optionresponse//optioninput">
+  <!-- like <optioninput options="('yellow','blue','green')" correct="blue"/> -->
+  <xsl:variable name="correctOptionVal"><xsl:value-of select="@correct"/></xsl:variable>
+  <xsl:for-each select="str:split(translate(translate(@options, '()', ''), $APOS, ''), ',')">
+    <xsl:choose>
+      <xsl:when test="text() = $correctOptionVal">
+      * [X] <xsl:value-of select="current()" />
+      </xsl:when>
+      <xsl:otherwise>
+      * [ ] <xsl:value-of select="current()" />
+      </xsl:otherwise>
+    </xsl:choose>  
+  </xsl:for-each>
 </xsl:template>
 
 <!-- don't output scripts used in answer eval -->
 <xsl:template match="problem//script|answer[@type='loncapa/python']" />
 
-<!-- <xsl:template match="html//table">[HTML TABLE not displayed]</xsl:template> --><!-- drop tables for now -->
-
-
+<xsl:template match="html//table">[HTML TABLE not displayed]</xsl:template><!-- drop tables for now -->
 
 <xsl:template name="updates">
 <xsl:text>----
