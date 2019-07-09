@@ -9,6 +9,8 @@ from lxml import etree
 
 from django.utils.translation import ugettext as _
 
+from xmodule.contentstore.content import StaticContent
+
 
 class PyLocalXSLResolver(etree.Resolver):
     """
@@ -95,3 +97,16 @@ class ExportFSPolicyTabsJSONResolver(ExportFSResolver):
                     return self.resolve_empty(context)
         else:
             return self.resolve_empty(context)
+
+
+class StaticContentURLResolver(etree.Resolver):
+    """ Resolve to string of static content asset URL"""
+
+    def resolve(self, url, id, context):
+        if not url.startswith('static:'):
+            return None   # move on to next Resolver
+
+        path = url.replace('static:', '', 1)
+        static_content_url = StaticContent.
+
+        return self.resolve_string(static_content_url, context)

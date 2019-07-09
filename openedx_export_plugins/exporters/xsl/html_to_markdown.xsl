@@ -64,7 +64,12 @@
     <xsl:text>![</xsl:text>
     <xsl:value-of select="@alt" />
     <xsl:text>](</xsl:text>
-    <xsl:value-of select="@src" />
+    <xsl:choose>
+      <xsl:when test="contains(@src, '://')"><xsl:value-of select="@src" /></xsl:when>
+      <xsl:when test="starts-with(@src, '.')"><xsl:value-of select="@src" /></xsl:when>
+      <xsl:when test="starts-with(@src, '/')"><xsl:value-of select="concat($baseURL, @src)" /></xsl:when>
+      <xsl:otherwise><xsl:value-of select="concat('/', $baseURL, @src)" /></xsl:otherwise>
+    </xsl:choose>
     <xsl:text>) </xsl:text>
   </xsl:template>
 
