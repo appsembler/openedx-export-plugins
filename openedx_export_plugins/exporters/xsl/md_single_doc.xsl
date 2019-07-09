@@ -6,12 +6,15 @@
     extension-element-prefixes="dyn str"
     version="1.0">
 
+  <xsl:param name="baseURL" />
+
+
   <xsl:include href="pylocal:html_to_markdown.xsl" />
 
   <xsl:output method="text" encoding="utf-8" indent="no"/>
   <xsl:preserve-space elements="*"/>
-  <xsl:variable name="APOS">'</xsl:variable>
 
+  <xsl:variable name="APOS">'</xsl:variable>
 
   <xsl:template name="mdHeading">
     <xsl:param name="nodeName" />

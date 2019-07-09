@@ -5,6 +5,8 @@ additional options to xmodule lib ExportManager
 
 from lxml import etree
 
+from django.conf import settings
+
 from xmodule.modulestore import xml_exporter
 
 from . import resolvers
@@ -64,6 +66,6 @@ class PluggableCourseExportManager(xml_exporter.CourseExportManager):
         xsl_sheet = self._load_export_xsl()
         xslt_root = etree.XML(xsl_sheet, parser)
         transform = etree.XSLT(xslt_root)
-        result_tree = transform(root)
+        result_tree = transform(root, baseURL="'{}'".format(settings.LMS_ROOT_URL))
         print(str(result_tree))
         return result_tree

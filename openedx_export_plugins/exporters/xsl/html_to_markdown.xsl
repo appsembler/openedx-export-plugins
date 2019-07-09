@@ -5,7 +5,7 @@
     xmlns:functx="http://www.functx.com"
     xmlns:xs="http://www.w3.org/2001/XMLSchema" 
     version="1.0">
-    
+
   <xsl:output method="text" indent="no"/>
   <xsl:preserve-space elements="*" />
 
@@ -46,7 +46,17 @@
     <xsl:text>[</xsl:text>
     <xsl:apply-templates select="node()|text()" />
     <xsl:text>](</xsl:text>
-    <xsl:value-of select="@href" />
+    <xsl:choose>
+      <xsl:when test="contains(@href, '://')">
+        <xsl:value-of select="@href" />
+      </xsl:when>
+      <xsl:when test="starts-with(@href, '.')">
+        <xsl:value-of select="@href" />
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:value-of select="concat($baseURL, @href)" />
+      </xsl:otherwise>
+    </xsl:choose>
     <xsl:text>)</xsl:text>
   </xsl:template>
 

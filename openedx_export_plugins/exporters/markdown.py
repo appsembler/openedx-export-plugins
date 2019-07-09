@@ -2,9 +2,12 @@
 Markdown format exporter for Open edX course content
 """
 
-from lxml import etree
 import json
 import os
+
+from lxml import etree
+
+from django.conf import settings
 
 from . import base, resolvers
 
@@ -44,7 +47,7 @@ class MarkdownCourseExportManager(base.PluggableCourseExportManager):
         xsl_sheet = self._load_export_xsl()
         xslt_root = etree.XML(xsl_sheet, parser)
         transform = etree.XSLT(xslt_root)
-        result_tree = transform(root)
+        result_tree = transform(root, baseURL="'{}'".format(settings.LMS_ROOT_URL))
         # print(str(result_tree))
         return result_tree
 
