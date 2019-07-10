@@ -103,27 +103,31 @@
       <xsl:apply-templates select="dyn:evaluate('document(concat(&quot;tmpfs:vertical/&quot;, @url_name, &quot;.xml&quot;))')"/>
   </xsl:template>
 
-  <xsl:template match="vertical/node()[not(self::html)][@url_name]"><!-- resolve to file contents matching @url_name or if no file, match node -->
+  <xsl:template match="vertical/*[not(self::html)][@url_name]" priority="2"><!-- resolve to file contents matching @url_name or if no file, match node -->
       <xsl:variable name="componentContents" select="dyn:evaluate('document(concat(&quot;tmpfs:&quot;, local-name(), &quot;/&quot;, @url_name, &quot;.xml&quot;))')"/>
-      <!-- <xsl:text><xsl:value-of select="$componentContents" /></xsl:text> -->
-      <xsl:if test="not($componentContents)">
-        <xsl:call-template name="nonFileComponent" mode="markdown">
-          <xsl:with-param name="nodeType" select="local-name()"/>
-          <xsl:with-param name="displayName" select="@display_name|@name" />
-        </xsl:call-template> 
-      </xsl:if>
-      <xsl:apply-templates select="dyn:evaluate('document(concat(&quot;tmpfs:&quot;, local-name(), &quot;/&quot;, @url_name, &quot;.xml&quot;))')" />
+      <xsl:choose>
+        <xsl:when test="$componentContents/*"><!-- test for any content (url not resolved as empty) -->
+          <xsl:apply-templates select="$componentContents" />
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:call-template name="nonFileComponent" mode="markdown">
+            <xsl:with-param name="nodeType" select="local-name()"/>
+            <xsl:with-param name="displayName" select="@display_name|@name" />
+          </xsl:call-template>           
+        </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 
   <xsl:template match="vertical/html[@url_name]">
-    <xsl:apply-templates select="dyn:evaluate('document(concat(&quot;tmpfs:&quot;, local-name(), &quot;/&quot;, @url_name, &quot;.xml&quot;))')" />
+    <xsl:apply-templates select="dyn:evaluate('document(concat(&quot;tmpfs:html/&quot; @url_name, &quot;.xml&quot;))')" />
   </xsl:template>
 
   <xsl:template match="html[@filename]"><!-- process the actual .html file for html components -->
     <xsl:apply-templates select="dyn:evaluate('document(concat(&quot;tmpfs:html/&quot;, @filename, &quot;.html&quot;))')"/>
   </xsl:template>
 
-  <xsl:template match="*[@display_name|@name]"><!-- make sure to at least display a heading for any other component type -->
+  <!-- make sure to at least display a heading for any other component type -->
+  <xsl:template match="*[@display_name|@name]" priority="1">
     <xsl:call-template name="mdHeading" mode="markdown">
       <xsl:with-param name="nodeName" select="local-name()"/>
       <xsl:with-param name="blockURL" select="@href"/>
