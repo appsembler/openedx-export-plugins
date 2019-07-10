@@ -388,9 +388,9 @@
 			<xsl:text>)</xsl:text>
 		</xsl:otherwise>
 	</xsl:choose>
-	<!-- <xsl:if test="parent::div">
-		 --><xsl:text>&#xA;&#xA;</xsl:text>
-	<!-- </xsl:if> --><!-- always add line breaks -->
+	<xsl:if test="parent::*[not(self::a)]">
+		<xsl:text>&#xA;&#xA;</xsl:text>
+	</xsl:if><!-- always add line breaks unless in anchor tag -->
 </xsl:template>
 
 <!-- blockquotes -->
