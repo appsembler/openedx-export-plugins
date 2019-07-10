@@ -8,15 +8,14 @@
 
   <xsl:param name="baseURL" />
 
-
-  <xsl:include href="pylocal:html_to_markdown.xsl" />
+  <xsl:include href="pylocal:html_to_markdown_2.xsl" />
 
   <xsl:output method="text" encoding="utf-8" indent="no"/>
   <xsl:preserve-space elements="*"/>
 
   <xsl:variable name="APOS">'</xsl:variable>
 
-  <xsl:template name="mdHeading">
+  <xsl:template name="mdHeading" mode="markdown">
     <xsl:param name="nodeName" />
     <xsl:param name="blockTitle"><xsl:value-of select="$nodeName"/></xsl:param>
     <xsl:param name="blockURL"></xsl:param>
@@ -38,14 +37,14 @@
   </xsl:template>
 
   <xsl:template match="*">
-    <xsl:apply-templates />
+    <xsl:apply-templates mode="markdown"/>
   </xsl:template>
 
   <xsl:template match="comment()"/>
 
   <xsl:template match="//text()">
     <xsl:value-of select="translate(., '#', '`#`')" />
-    <xsl:apply-templates />
+    <xsl:apply-templates mode="markdown"/>
   </xsl:template>
 
   <!-- whitespace-only text node to explicit line break -->
@@ -114,22 +113,6 @@
         </xsl:call-template> 
       </xsl:if>
       <xsl:apply-templates select="dyn:evaluate('document(concat(&quot;tmpfs:&quot;, local-name(), &quot;/&quot;, @url_name, &quot;.xml&quot;))')" />
-<!--      <xsl:variable name="componentFile" select="dyn:evaluate('document(concat(&quot;tmpfs:&quot;, local-name(), &quot;/&quot;, @url_name, &quot;.xml&quot;))')" />
-      path: <xsl:value-of select="concat(&quot;tmpfs:&quot;, local-name(), &quot;/&quot;, @url_name, &quot;.xml&quot;)"/>
-      componentFile: <xsl:value-of select="$componentFile" />foo <xsl:text>&#10;</xsl:text>
-
-       <xsl:choose>
-        <xsl:when test="$componentFile">
-          <xsl:apply-templates select="$componentFile" />
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:call-template name="nonFileComponent">
-            <xsl:with-param name="nodeType"><xsl:value-of select="local-name()" /></xsl:with-param>
-          </xsl:call-template> 
-        </xsl:otherwise>
-      </xsl:choose>
- -->      
-
   </xsl:template>
 
   <xsl:template match="html[@filename]"><!-- process the actual .html file for html components -->
@@ -139,41 +122,41 @@
   <!-- CUSTOM COMPONENT NODES -->
 
   
-<xsl:template name="nonFileComponent"><!-- print out the name or node name and field values -->
+<xsl:template name="nonFileComponent" mode="markdown"><!-- print out the name or node name and field values -->
   <xsl:param name="nodeType"/>
   <xsl:variable name="displayName" select="@display_name|@name" />
   <xsl:call-template name="mdHeading"><xsl:with-param name="nodeName" select="$nodeType"/><xsl:with-param name="blockURL" select="@href"/></xsl:call-template>
-  <xsl:for-each select="@*[not(name() = 'display_name' or name() = 'name' or name() = 'url_name' or name() = 'xblock-family')]">
-* <xsl:value-of select="concat(local-name(), ': ', current())" /><xsl:text>&#10;</xsl:text>
-  </xsl:for-each>
+<xsl:for-each select="@*[not(name() = 'display_name' or name() = 'name' or name() = 'url_name' or name() = 'xblock-family')]">
+<xsl:value-of select="concat('*', local-name(), ':* ', current())" /><xsl:text>&#10;</xsl:text>
+</xsl:for-each>
 </xsl:template>
 
 
-<xsl:template match="video/source"><!-- all the information is in attrs -->
+<xsl:template match="video/source" mode="markdown"><!-- all the information is in attrs -->
   video source [<xsl:value-of select="@src" />](<xsl:value-of select="@src" />))
 </xsl:template>  
 
-<xsl:template name="choiceCorrectness">
+<xsl:template name="choiceCorrectness" mode="markdown">
   <xsl:choose>
-    <xsl:when test="@correct = 'true'">X</xsl:when>
+    <xsl:when test="@correct = 'true'">x</xsl:when>
     <xsl:otherwise><xsl:text> </xsl:text></xsl:otherwise> 
   </xsl:choose>
 </xsl:template>  
 
-<xsl:template match="multiplechoiceresponse//choice">
-  * [<xsl:call-template name="choiceCorrectness"/>] <xsl:value-of select="./text()" />
+<xsl:template match="multiplechoiceresponse//choice" mode="markdown">
+  - [<xsl:call-template name="choiceCorrectness"/>] <xsl:value-of select="./text()" />
 </xsl:template>
 
-<xsl:template match="optionresponse//optioninput">
+<xsl:template match="optionresponse//optioninput" mode="markdown">
   <!-- like <optioninput options="('yellow','blue','green')" correct="blue"/> -->
   <xsl:variable name="correctOptionVal"><xsl:value-of select="@correct"/></xsl:variable>
   <xsl:for-each select="str:split(translate(translate(@options, '()', ''), $APOS, ''), ',')">
     <xsl:choose>
       <xsl:when test="text() = $correctOptionVal">
-      * [X] <xsl:value-of select="current()" />
+      - [x] <xsl:value-of select="current()" />
       </xsl:when>
       <xsl:otherwise>
-      * [ ] <xsl:value-of select="current()" />
+      - [ ] <xsl:value-of select="current()" />
       </xsl:otherwise>
     </xsl:choose>  
   </xsl:for-each>
@@ -182,9 +165,9 @@
 <!-- don't output scripts used in answer eval -->
 <xsl:template match="problem//script|answer[@type='loncapa/python']" />
 
-<xsl:template match="html//table">[HTML TABLE not displayed]</xsl:template><!-- drop tables for now -->
+<!-- <xsl:template match="html//table" mode="markdown">[HTML TABLE not displayed]</xsl:template> --><!-- drop tables for now -->
 
-<xsl:template name="updates">
+<xsl:template name="updates" mode="markdown">
 <xsl:text>----
 ### UPDATES
 
@@ -192,7 +175,7 @@
 <xsl:apply-templates select="document('tmpfs:info/updates.html')" />
 </xsl:template>
 
-<xsl:template name="handouts">
+<xsl:template name="handouts" mode="markdown">
 <xsl:text>----
 ### HANDOUTS
 
@@ -200,7 +183,7 @@
 <xsl:apply-templates select="document('tmpfs:info/handouts.html')" />
 </xsl:template>
 
-<xsl:template name="assets">
+<xsl:template name="assets" mode="markdown">
 <!-- output parsed assets JSON file -->
 <xsl:text>----
 ----
