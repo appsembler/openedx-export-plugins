@@ -87,6 +87,8 @@
 </root>
 </xsl:template>
 
+  <xsl:template match="*[@visible_to_staff_only = 'true']"/>
+
   <xsl:template match="course|chapter|sequential|vertical">
       <xsl:if test="local-name() != 'course'">
         <xsl:call-template name="mdHeading"><xsl:with-param name="nodeName" select="local-name()"/><xsl:with-param name="blockTitle" select="@display_name|@name"/><xsl:with-param name="blockURL" select="@href"/></xsl:call-template>
@@ -106,7 +108,7 @@
       <xsl:apply-templates select="dyn:evaluate('document(concat(&quot;tmpfs:vertical/&quot;, @url_name, &quot;.xml&quot;))')"/>
   </xsl:template>
 
-  <xsl:template match="vertical/*[@url_name]"><!-- resolve to file contents matching @url_name or if no file, match node -->
+  <xsl:template match="vertical/*[@url_name][not(@visible_to_staff_only='true')]"><!-- resolve to file contents matching @url_name or if no file, match node -->
       <xsl:if test="local-name() != 'html'">
         <xsl:call-template name="nonFileComponent">
           <xsl:with-param name="nodeType"><xsl:value-of select="local-name()" /></xsl:with-param>
@@ -119,8 +121,9 @@
     <xsl:apply-templates select="dyn:evaluate('document(concat(&quot;tmpfs:html/&quot;, @filename, &quot;.html&quot;))')"/>
   </xsl:template>
 
-  <!-- CUSTOM COMPONENT NODES -->
 
+
+  <!-- CUSTOM COMPONENT NODES -->
   
 <xsl:template name="nonFileComponent" mode="markdown"><!-- print out the name or node name and field values -->
   <xsl:param name="nodeType"/>
