@@ -17,8 +17,8 @@
 
   <xsl:template name="mdHeading" mode="markdown">
     <xsl:param name="nodeName" />
-    <xsl:param name="blockTitle"><xsl:value-of select="$nodeName"/></xsl:param>
-    <xsl:param name="blockURL"></xsl:param>
+    <xsl:param name="blockTitle" select="$nodeName"/>
+    <xsl:param name="blockURL"/>
     <xsl:choose>
       <xsl:when test="$nodeName = 'course'"># </xsl:when>
       <xsl:when test="$nodeName = 'chapter'">## </xsl:when>
@@ -42,11 +42,6 @@
 
   <xsl:template match="comment()"/>
 
-  <xsl:template match="//text()">
-    <xsl:value-of select="translate(., '#', '`#`')" />
-    <xsl:apply-templates mode="markdown"/>
-  </xsl:template>
-
   <!-- whitespace-only text node to explicit line break -->
   <xsl:template match="text()[not(normalize-space())]">
       <xsl:text>&#10;</xsl:text>
@@ -59,13 +54,13 @@
 [x] get assets from json
 [-] translate URLS for images and hrefs
 [] maybe: don't reprint subheadings for verticals if same display_name as sequential
-[] handle <table> tags in html
+[-] handle <table> tags in html
 [x] handle handouts
 [x handle updates
 [x] handle tabs
 [-] handle custom xblocks
-[] wrap visible_to_staff_only blocks with italics
-[] wrap sequentials with prereqs prereq blocks with italics
+[x] don't include visible_to_staff_only blocks
+[] maybe: wrap sequentials with prereqs prereq blocks with italics
 
 -->  
 
@@ -108,28 +103,47 @@
       <xsl:apply-templates select="dyn:evaluate('document(concat(&quot;tmpfs:vertical/&quot;, @url_name, &quot;.xml&quot;))')"/>
   </xsl:template>
 
-  <xsl:template match="vertical/*[@url_name][not(@visible_to_staff_only='true')]"><!-- resolve to file contents matching @url_name or if no file, match node -->
-      <xsl:if test="local-name() != 'html'">
-        <xsl:call-template name="nonFileComponent">
-          <xsl:with-param name="nodeType"><xsl:value-of select="local-name()" /></xsl:with-param>
+  <xsl:template match="vertical/node()[not(self::html)][@url_name]"><!-- resolve to file contents matching @url_name or if no file, match node -->
+      <xsl:variable name="componentContents" select="dyn:evaluate('document(concat(&quot;tmpfs:&quot;, local-name(), &quot;/&quot;, @url_name, &quot;.xml&quot;))')"/>
+      <!-- <xsl:text><xsl:value-of select="$componentContents" /></xsl:text> -->
+      <xsl:if test="not($componentContents)">
+        <xsl:call-template name="nonFileComponent" mode="markdown">
+          <xsl:with-param name="nodeType" select="local-name()"/>
+          <xsl:with-param name="displayName" select="@display_name|@name" />
         </xsl:call-template> 
       </xsl:if>
       <xsl:apply-templates select="dyn:evaluate('document(concat(&quot;tmpfs:&quot;, local-name(), &quot;/&quot;, @url_name, &quot;.xml&quot;))')" />
+  </xsl:template>
+
+  <xsl:template match="vertical/html[@url_name]">
+    <xsl:apply-templates select="dyn:evaluate('document(concat(&quot;tmpfs:&quot;, local-name(), &quot;/&quot;, @url_name, &quot;.xml&quot;))')" />
   </xsl:template>
 
   <xsl:template match="html[@filename]"><!-- process the actual .html file for html components -->
     <xsl:apply-templates select="dyn:evaluate('document(concat(&quot;tmpfs:html/&quot;, @filename, &quot;.html&quot;))')"/>
   </xsl:template>
 
+  <xsl:template match="*[@display_name|@name]"><!-- make sure to at least display a heading for any other component type -->
+    <xsl:call-template name="mdHeading" mode="markdown">
+      <xsl:with-param name="nodeName" select="local-name()"/>
+      <xsl:with-param name="blockURL" select="@href"/>
+      <xsl:with-param name="blockTitle" select="@display_name|@name"/>
+    </xsl:call-template>
+    <xsl:apply-templates/>
+  </xsl:template>
 
 
   <!-- CUSTOM COMPONENT NODES -->
   
 <xsl:template name="nonFileComponent" mode="markdown"><!-- print out the name or node name and field values -->
   <xsl:param name="nodeType"/>
-  <xsl:variable name="displayName" select="@display_name|@name" />
-  <xsl:call-template name="mdHeading"><xsl:with-param name="nodeName" select="$nodeType"/><xsl:with-param name="blockURL" select="@href"/></xsl:call-template>
-<xsl:for-each select="@*[not(name() = 'display_name' or name() = 'name' or name() = 'url_name' or name() = 'xblock-family')]">
+  <xsl:param name="displayName"/>
+  <xsl:call-template name="mdHeading" mode="markdown">
+    <xsl:with-param name="nodeName" select="$nodeType"/>
+    <xsl:with-param name="blockURL" select="@href"/>
+    <xsl:with-param name="blockTitle" select="$displayName"/>
+  </xsl:call-template>
+<xsl:for-each select="@*[not(name() = 'display_name' or name() = 'name' or name() = 'url_name' or name() = 'xblock-family' or name() = 'markdown')]">
 <xsl:value-of select="concat('*', local-name(), ':* ', current())" /><xsl:text>&#10;</xsl:text>
 </xsl:for-each>
 </xsl:template>
@@ -137,7 +151,7 @@
 
 <xsl:template match="video/source" mode="markdown"><!-- all the information is in attrs -->
   video source [<xsl:value-of select="@src" />](<xsl:value-of select="@src" />))
-</xsl:template>  
+</xsl:template>
 
 <xsl:template name="choiceCorrectness" mode="markdown">
   <xsl:choose>
