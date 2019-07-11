@@ -119,10 +119,10 @@
   </xsl:template>
 
   <xsl:template match="vertical/html[@url_name]">
-    <xsl:apply-templates select="dyn:evaluate('document(concat(&quot;tmpfs:html/&quot; @url_name, &quot;.xml&quot;))')" />
+    <xsl:apply-templates select="dyn:evaluate('document(concat(&quot;tmpfs:html/&quot;, @url_name, &quot;.xml&quot;))')" />
   </xsl:template>
 
-  <xsl:template match="html[@filename]"><!-- process the actual .html file for html components -->
+  <xsl:template match="html[@filename]" priority="2"><!-- process the actual .html file for html components -->
     <xsl:apply-templates select="dyn:evaluate('document(concat(&quot;tmpfs:html/&quot;, @filename, &quot;.html&quot;))')"/>
   </xsl:template>
 
