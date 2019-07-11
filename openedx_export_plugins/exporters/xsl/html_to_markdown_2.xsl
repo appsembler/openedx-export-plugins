@@ -57,6 +57,9 @@
 	- table-style
 		- (default): keep HTML syntax;
 		- 'break': break tables into one text paragraph for each cell (useful for email text);
+	- html-style
+	    - (default): output as elements
+	    - 'cdata': output wrapped as CDATA
 	- escape-npss (escape number-period-space-sequence; see http://daringfireball.net/projects/markdown/syntax#list)
 		- (default): perform escapes;
 		- 'no': don't do it (useful for email text);

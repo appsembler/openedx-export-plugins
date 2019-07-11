@@ -31,7 +31,6 @@ class MarkdownCourseExportManager(base.PluggableCourseExportManager):
     def _build_markdown_document(self, root, export_fs):
         transformed = self._do_xsl_transform(root, export_fs)
         output_path = export_fs.getsyspath("output.md")
-        # TODO: need to them transform JSON to markdown
         transformed.write(output_path, encoding="utf-8", method="text")
         # TODO: need to return something here
 

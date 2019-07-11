@@ -10,7 +10,6 @@
 
   <xsl:include href="pylocal:html_to_markdown_2.xsl" />
 
-  <xsl:output method="text" encoding="utf-8" indent="no"/>
   <xsl:preserve-space elements="*"/>
 
   <xsl:variable name="APOS">'</xsl:variable>
@@ -68,7 +67,7 @@
 <!-- OLX export doesn't include a well-formed XML document with root -->
 <!-- keep this (lack of) indentation -->
 <xsl:template match="*[@course]">
-<root>
+<root>  
 # <xsl:value-of select="dyn:evaluate('document(concat(&quot;tmpfs:course/&quot;, @url_name, &quot;.xml&quot;))')//course/@display_name"/>
 *<xsl:value-of select="./@org"/> / <xsl:value-of select="./@course"/> / <xsl:value-of select="./@url_name"/>*
 <xsl:apply-templates select="document('tmpfs:about/overview.html')//section[@class='about']"/>
@@ -82,7 +81,7 @@
 </root>
 </xsl:template>
 
-  <xsl:template match="*[@visible_to_staff_only = 'true']"/>
+  <xsl:template match="*[@visible_to_staff_only = 'true']" priority="2"/>
 
   <xsl:template match="course|chapter|sequential|vertical">
       <xsl:if test="local-name() != 'course'">
@@ -186,7 +185,8 @@
 <!-- don't output scripts used in answer eval -->
 <xsl:template match="problem//script|answer[@type='loncapa/python']" />
 
-<!-- <xsl:template match="html//table" mode="markdown">[HTML TABLE not displayed]</xsl:template> --><!-- drop tables for now -->
+<!-- drop tables for now -->
+<xsl:template match="html//table" mode="markdown">[HTML TABLE not displayed]<xsl:text>&#xA;&#xA;</xsl:text></xsl:template>
 
 <xsl:template name="updates" mode="markdown">
 <xsl:text>----
