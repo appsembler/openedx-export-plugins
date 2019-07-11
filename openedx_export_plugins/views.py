@@ -28,6 +28,7 @@ def plugin_export_handler(request, course_key_string, plugin_name):
     The restful handler for exporting a course with an exporter plugin.
     """
     course_key = CourseKey.from_string(course_key_string)
+
     if not has_course_author_access(request.user, course_key):
         raise PermissionDenied()
 
@@ -41,7 +42,7 @@ def plugin_export_handler(request, course_key_string, plugin_name):
         raise HttpResponse(status=406)
 
     root_dir = mkdtemp()
-    target_dir = os.path.normpath(course_key_string)
+    target_dir = os.path.normpath(course_key_string.replace('/', '+'))
     exporter = plugin_class(modulestore(), contentstore(), course_key, root_dir, target_dir)
     exporter.export()
 

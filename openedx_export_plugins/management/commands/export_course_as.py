@@ -38,7 +38,7 @@ class Command(BaseCommand):
         root_dir = mkdtemp()
 
         course_id = options['course_id']
-        target_dir = os.path.normpath(course_id)
+        target_dir = os.path.normpath(course_id.replace('/', '+'))
 
         try:
             course_key = CourseKey.from_string(course_id)
