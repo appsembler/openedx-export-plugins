@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<xsl:stylesheet 
+	version="1.0" 
+	xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+	xmlns:dyn="http://exslt.org/dynamic"
+    extension-element-prefixes="dyn">
 
+<!-- adapted from below, with small additions -->
 <!--
 	Name: HTML To Markdown Text;
 	Version: 1.1.1;
@@ -373,6 +378,22 @@
 
 <!-- images -->
 
+<!-- transform non-external image sources to full asset URL on platform-->
+<xsl:template name="imgSrc">
+	<xsl:param name="src"/>
+    <xsl:choose>
+      <xsl:when test="contains($src, '://')">
+        <xsl:value-of select="$src" />
+      </xsl:when>
+      <xsl:when test="starts-with($src, '.')">
+        <xsl:value-of select="$src" />
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:value-of select="$baseURL" /><xsl:value-of select="dyn:evaluate('document(concat(&quot;asseturl:&quot;, $src))')" />
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
 <xsl:template match="img" mode="markdown">
 	<xsl:choose>
 		<xsl:when test="(@class or @id or @style) and $img-style != 'markdown'">
@@ -382,13 +403,21 @@
 			<xsl:text>![</xsl:text>
 			<xsl:value-of select="@alt"/>
 			<xsl:text>](</xsl:text>
-			<xsl:value-of select="@src"/>
-			<!-- <xsl:if test="@title != ''"> -->
+			<xsl:call-template name="imgSrc">
+				<xsl:with-param name="src" select="@src"/>
+			</xsl:call-template>
+			<xsl:if test="@title != ''">
 				<xsl:text>&#x20;"</xsl:text>
 				<xsl:value-of select="@title|@src"/><!-- use src as title if not present -->
 				<xsl:text>"</xsl:text>
-			<!-- </xsl:if> -->
+			</xsl:if>
 			<xsl:text>)</xsl:text>
+			<xsl:if test="@height|@width">
+				<xsl:text>{</xsl:text>
+				<xsl:text> height=</xsl:text><xsl:value-of select="@height" /><xsl:text>px</xsl:text>
+				<xsl:text> width=</xsl:text><xsl:value-of select="@width" /><xsl:text>px</xsl:text>
+				<xsl:text>}</xsl:text>
+			</xsl:if>
 		</xsl:otherwise>
 	</xsl:choose>
 	<xsl:if test="parent::*[not(self::a)]">

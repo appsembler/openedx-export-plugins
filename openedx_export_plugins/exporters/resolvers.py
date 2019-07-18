@@ -99,14 +99,22 @@ class ExportFSPolicyTabsJSONResolver(ExportFSResolver):
             return self.resolve_empty(context)
 
 
-class StaticContentURLResolver(etree.Resolver):
-    """ Resolve to string of static content asset URL"""
+class AssetURLResolver(ExportFSResolver):
+    """ Resolve to string of content asset URL via assets.json"""
 
     def resolve(self, url, id, context):
-        if not url.startswith('static:'):
+        if not url.startswith('asseturl:'):
             return None   # move on to next Resolver
 
-        path = url.replace('static:', '', 1)
-        static_content_url = StaticContent.
-
-        return self.resolve_string(static_content_url, context)
+        asset_id = url.replace('asseturl:/static/', '', 1)
+        json_path = self.fs.getsyspath("policies/assets.json")
+        if os.path.exists(json_path):
+            with open(json_path) as f:
+                assets = json.load(f)
+                try:
+                    asset_url = assets[asset_id]['filename']
+                    return self.resolve_string(u"<xml>{}</xml>".format(asset_url), context)
+                except KeyError:
+                    return self.resolve_empty(context)
+        else:
+            return self.resolve_empty(context)
