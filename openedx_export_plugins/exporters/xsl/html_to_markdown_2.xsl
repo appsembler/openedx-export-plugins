@@ -352,6 +352,27 @@
 	</xsl:if>
 </xsl:template>
 
+
+<!-- transform non-external asset URLs to full asset URL on platform-->
+<xsl:template name="evalHref">
+	<xsl:param name="url"/>
+    <xsl:choose>
+      <xsl:when test="contains($url, '://')">
+        <xsl:value-of select="$url" />
+      </xsl:when>
+      <xsl:when test="starts-with($url, '.')">
+        <xsl:value-of select="$url" />
+      </xsl:when>
+      <xsl:when test="starts-with($url, '/static')">
+        <xsl:value-of select="$baseURL" /><xsl:value-of select="dyn:evaluate('document(concat(&quot;asseturl:&quot;, $url))')" />
+      </xsl:when>
+      <xsl:otherwise>
+		<xsl:value-of select="$url" />
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+
 <!-- links -->
 
 <xsl:template match="a" mode="markdown">
@@ -363,7 +384,9 @@
 			<xsl:text>[</xsl:text>
 			<xsl:apply-templates select="* | text()" mode="markdown"/>
 			<xsl:text>](</xsl:text>
-			<xsl:value-of select="@href"/>
+			<xsl:call-template name="evalHref">
+				<xsl:with-param name="url" select="@href"/>
+			</xsl:call-template>
 			<xsl:if test="@title != ''">
 				<xsl:text>&#x20;"</xsl:text>
 				<xsl:value-of select="@title"/>
@@ -379,22 +402,6 @@
 
 <!-- images -->
 
-<!-- transform non-external image sources to full asset URL on platform-->
-<xsl:template name="imgSrc">
-	<xsl:param name="src"/>
-    <xsl:choose>
-      <xsl:when test="contains($src, '://')">
-        <xsl:value-of select="$src" />
-      </xsl:when>
-      <xsl:when test="starts-with($src, '.')">
-        <xsl:value-of select="$src" />
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:value-of select="$baseURL" /><xsl:value-of select="dyn:evaluate('document(concat(&quot;asseturl:&quot;, $src))')" />
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:template>
-
 <xsl:template match="img" mode="markdown">
 	<xsl:choose>
 		<xsl:when test="(@class or @id or @style) and $img-style != 'markdown'">
@@ -404,8 +411,8 @@
 			<xsl:text>![</xsl:text>
 			<xsl:value-of select="@alt"/>
 			<xsl:text>](</xsl:text>
-			<xsl:call-template name="imgSrc">
-				<xsl:with-param name="src" select="@src"/>
+			<xsl:call-template name="evalHref">
+				<xsl:with-param name="url" select="@src"/>
 			</xsl:call-template>
 			<xsl:if test="@title != ''">
 				<xsl:text>&#x20;"</xsl:text>

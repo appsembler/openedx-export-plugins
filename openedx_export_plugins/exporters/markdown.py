@@ -45,6 +45,7 @@ class MarkdownCourseExportManager(base.PluggableCourseExportManager):
         parser.resolvers.add(ExportFSAssetsFileResolver(export_fs))
         parser.resolvers.add(resolvers.ExportFSPolicyTabsJSONResolver(export_fs))
         parser.resolvers.add(resolvers.AssetURLResolver(export_fs))
+
         xsl_sheet = self._load_export_xsl()
         xslt_root = etree.XML(xsl_sheet, parser)
         transform = etree.XSLT(xslt_root)
