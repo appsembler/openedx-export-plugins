@@ -62,6 +62,7 @@
 	- table-style
 		- (default): keep HTML syntax;
 		- 'break': break tables into one text paragraph for each cell (useful for email text);
+		- 'md-pipe': convert to Markdown pipe style table
 	- html-style
 	    - (default): output as elements
 	    - 'cdata': output wrapped as CDATA
@@ -78,10 +79,10 @@
 
 <!-- configuration -->
 
-<xsl:param name="h-style" select="'setex'"/>
+<xsl:param name="h-style" select="'atx'"/>
 <xsl:param name="a-style" select="'markdown'"/>
 <xsl:param name="img-style" select="'markdown'"/>
-<xsl:param name="table-style"/>
+<xsl:param name="table-style" select="'md-pipe'"/>
 <xsl:param name="escape-npss"/>
 <xsl:param name="escape-out"/>
 <xsl:param name="unparseables"/>
@@ -532,6 +533,9 @@
 		<xsl:when test="$table-style = 'break'">
 			<xsl:apply-templates select="." mode="break"/>
 		</xsl:when>
+		<xsl:when test="$table-style = 'md-pipe'">
+			<xsl:apply-templates select="." mode="md-pipe"/>
+		</xsl:when>
 		<xsl:otherwise>
 			<xsl:apply-templates select="." mode="html"/>
 			<xsl:text>&#xA;&#xA;</xsl:text>
@@ -553,7 +557,42 @@
 	<xsl:if test="not(p[last()])">
 		<xsl:text>&#xA;&#xA;</xsl:text>
 	</xsl:if>
-</xsl:template> 
+</xsl:template>
+
+<!-- markdown (pipe-style) tables -->
+<xsl:template match="table" mode="md-pipe">
+	<xsl:apply-templates select=".//tr" mode="md-pipe"/>
+	<xsl:text>&#xA;</xsl:text>
+</xsl:template>
+
+<xsl:template match="tr" mode="md-pipe">
+	<xsl:apply-templates select="td|th" mode="md-pipe"/>
+	<xsl:if test="position() = 1">
+		<xsl:text>&#xA;</xsl:text>
+		<xsl:for-each select="td|th">
+			<xsl:choose>
+				<xsl:when test="position() = last()">
+					<xsl:text>----</xsl:text>
+				</xsl:when>
+				<xsl:otherwise>
+					<xsl:text>----|</xsl:text>
+				</xsl:otherwise>
+			</xsl:choose>
+		</xsl:for-each>
+	</xsl:if>
+	<xsl:text>&#xA;</xsl:text>
+</xsl:template>
+
+<xsl:template match="td|th" mode="md-pipe">
+	<xsl:choose>
+		<xsl:when test="position() = last()">
+			<xsl:apply-templates mode="markdown" />
+		</xsl:when>
+		<xsl:otherwise>
+			<xsl:apply-templates mode="markdown" /><xsl:text>|</xsl:text>
+		</xsl:otherwise>
+	</xsl:choose>
+</xsl:template>
 
 <!-- unparseable elements (all handled as block level with trailing LFs) -->
 

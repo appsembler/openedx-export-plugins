@@ -53,7 +53,7 @@
 [x] get assets from json
 [-] translate URLS for images and hrefs
 [] maybe: don't reprint subheadings for verticals if same display_name as sequential
-[-] handle <table> tags in html
+[x] handle <table> tags in html
 [x] handle handouts
 [x handle updates
 [x] handle tabs
@@ -185,11 +185,11 @@
 <!-- don't output scripts used in answer eval -->
 <xsl:template match="problem//script|answer[@type='loncapa/python']" />
 
-<!-- drop tables for now -->
-<xsl:template match="html//table" mode="markdown">[HTML TABLE not displayed]<xsl:text>&#xA;&#xA;</xsl:text></xsl:template>
+<xsl:template 
 
 <xsl:template name="updates" mode="markdown">
 <xsl:text>----
+
 ### UPDATES
 
 </xsl:text>
