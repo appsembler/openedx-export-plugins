@@ -51,7 +51,7 @@
 [x] handle verticals nodes with no url_name.... what attrs to pull out?
 [x] handle code blocks
 [x] get assets from json
-[-] translate URLS for images and hrefs
+[x] translate URLS for images and hrefs
 [] maybe: don't reprint subheadings for verticals if same display_name as sequential
 [x] handle <table> tags in html
 [x] handle handouts

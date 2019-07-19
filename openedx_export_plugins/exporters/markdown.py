@@ -1,5 +1,7 @@
 """
-Markdown format exporter for Open edX course content
+Markdown format exporter for Open edX course content.
+Targeted Markdown variant is Pandoc's extended Markdown
+https://pandoc.org/MANUAL.html#pandocs-markdown
 """
 
 import json
@@ -24,7 +26,7 @@ class MarkdownCourseExportManager(base.PluggableCourseExportManager):
     def post_process(self, root, export_fs):
         """
         Perform final processing of outputted XML structure to Markdown
-        via XSLT
+        via XSLT.
         """
         self._build_markdown_document(root, export_fs)
 
@@ -32,7 +34,6 @@ class MarkdownCourseExportManager(base.PluggableCourseExportManager):
         transformed = self._do_xsl_transform(root, export_fs)
         output_path = export_fs.getsyspath("output.md")
         transformed.write(output_path, encoding="utf-8", method="text")
-        # TODO: need to return something here
 
     def _do_xsl_transform(self, root, export_fs):
         """
