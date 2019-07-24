@@ -59,16 +59,16 @@ class Command(BaseCommand):
         exporter.export()
 
         # read results from tmp output.md, write results to stdout or filename, if passed
-        results = self._get_results(root_dir, target_dir)
+        results = self._get_results(root_dir, target_dir, exporter)
         if filename:
             with open(filename, "w") as outfile:
                 outfile.write(results)
         else:
             self.stdout.write(results, ending="")
 
-    def _get_results(self, root_dir, target_dir):
+    def _get_results(self, root_dir, target_dir, plugin_class):
         """Load results from file"""
-        tmp_output_path = os.path.join(root_dir, target_dir, "output.md")
+        tmp_output_path = os.path.join(root_dir, target_dir, "output.{}".format(plugin_class().filename_extension))
         with open(tmp_output_path) as f:
             results = f.read()
         shutil.rmtree(root_dir)
