@@ -593,10 +593,11 @@
 <xsl:template match="td|th" mode="md-pipe">
 	<xsl:choose>
 		<xsl:when test="position() = last()">
-			<xsl:apply-templates mode="markdown" />
+			<!-- md-pipe doesn't support multiline cells so we just select all of the text which isn't the best -->
+			<xsl:value-of select="normalize-space(.)" mode="markdown" />
 		</xsl:when>
 		<xsl:otherwise>
-			<xsl:apply-templates mode="markdown" /><xsl:text>|</xsl:text>
+			<xsl:value-of select="normalize-space(.)" mode="markdown" /><xsl:text>|</xsl:text>
 		</xsl:otherwise>
 	</xsl:choose>
 </xsl:template>
