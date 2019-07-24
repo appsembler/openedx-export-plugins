@@ -2,6 +2,7 @@
 Define an Exporter Plugin class providing
 additional options to xmodule lib ExportManager
 """
+import datetime
 
 from lxml import etree
 
@@ -18,6 +19,10 @@ class PluggableCourseExportManager(xml_exporter.CourseExportManager):
     Course export plugins should register themselves in the namespace
     `openedx.exporters.course` and inherit from this class.
     """
+
+    @property
+    def filename_extension(self):
+        raise NotImplementedError
 
     def process_root(self, root, export_fs):
         """
@@ -67,6 +72,7 @@ class PluggableCourseExportManager(xml_exporter.CourseExportManager):
         xsl_sheet = self._load_export_xsl()
         xslt_root = etree.XML(xsl_sheet, parser)
         transform = etree.XSLT(xslt_root)
-        result_tree = transform(root, baseURL="'{}'".format(settings.LMS_ROOT_URL))
+        dt = datetime.datetime.now()
+        result_tree = transform(root, baseURL="'{}'".format(settings.LMS_ROOT_URL), curDateTime="'{}'".format(dt))
         print(str(result_tree))
         return result_tree

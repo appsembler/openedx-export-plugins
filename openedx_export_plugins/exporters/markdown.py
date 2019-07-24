@@ -4,6 +4,7 @@ Targeted Markdown variant is Pandoc's extended Markdown
 https://pandoc.org/MANUAL.html#pandocs-markdown
 """
 
+import datetime
 import json
 import os
 
@@ -22,6 +23,10 @@ class MarkdownCourseExportManager(base.PluggableCourseExportManager):
     # TODO: allow for alternative xsl via ConfigurationModel storage
     with open(os.path.join(os.path.dirname(__file__), 'xsl', 'md_single_doc.xsl'), 'r') as xslf:
         DEFAULT_XSL_STYLESHEET = xslf.read()
+
+    @property
+    def filename_extension(self):
+        return "md"
 
     def post_process(self, root, export_fs):
         """
@@ -49,7 +54,8 @@ class MarkdownCourseExportManager(base.PluggableCourseExportManager):
         xsl_sheet = self._load_export_xsl()
         xslt_root = etree.XML(xsl_sheet, parser)
         transform = etree.XSLT(xslt_root)
-        result_tree = transform(root, baseURL="'{}/'".format(settings.LMS_ROOT_URL))
+        dt = datetime.datetime.now()
+        result_tree = transform(root, baseURL="'{}/'".format(settings.LMS_ROOT_URL), curDateTime="'{}'".format(dt))
         # print(str(result_tree))
         return result_tree
 

@@ -7,6 +7,7 @@
     version="1.0">
 
   <xsl:param name="baseURL" />
+  <xsl:param name="curDateTime" />
 
   <xsl:include href="pylocal:html_to_markdown_2.xsl" />
 
@@ -57,7 +58,7 @@
 [x] handle handouts
 [x handle updates
 [x] handle tabs
-[-] handle custom xblocks
+[x] handle custom xblocks
 [x] don't include visible_to_staff_only blocks
 [] maybe: wrap sequentials with prereqs prereq blocks with italics
 
@@ -67,9 +68,12 @@
 <!-- OLX export doesn't include a well-formed XML document with root -->
 <!-- keep this (lack of) indentation -->
 <xsl:template match="*[@course]">
-<root>  
-# <xsl:value-of select="dyn:evaluate('document(concat(&quot;tmpfs:course/&quot;, @url_name, &quot;.xml&quot;))')//course/@display_name"/>
-<xsl:text>&#10;</xsl:text>
+<root>
+<!-- the following 3 lines are used with the Pandoc yaml_metadata_block Markdown extension -->
+---
+title: <xsl:value-of select="dyn:evaluate('document(concat(&quot;tmpfs:course/&quot;, @url_name, &quot;.xml&quot;))')//course/@display_name"/>
+date: Course exported from <xsl:value-of select="$baseURL" /> at <xsl:value-of select="$curDateTime" />
+---
 *<xsl:value-of select="./@org"/> / <xsl:value-of select="./@course"/><!--  / <xsl:value-of select="./@url_name"/> -->*
 <xsl:text>&#10;</xsl:text>
 <xsl:apply-templates select="document('tmpfs:about/overview.html')//section[@class='about']"/>
@@ -83,6 +87,7 @@
 </root>
 </xsl:template>
 
+  <!-- This excludes all staff only content.  Include/exclude would be a good configuration option candidate -->
   <xsl:template match="*[@visible_to_staff_only = 'true']" priority="2"/>
 
   <xsl:template match="course|chapter|sequential|vertical">

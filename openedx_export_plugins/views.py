@@ -1,3 +1,4 @@
+import datetime
 import os
 import shutil
 from tempfile import mkdtemp
@@ -46,8 +47,11 @@ def plugin_export_handler(request, course_key_string, plugin_name):
     exporter = plugin_class(modulestore(), contentstore(), course_key, root_dir, target_dir)
     exporter.export()
 
-    # TODO: don't assume output.md here
-    output_filepath = os.path.join(root_dir, target_dir, "output.md")
+    base_fn = "{}_{}".format(course_key_string,
+                             str(datetime.datetime.now().strftime('%Y-%M-%d_%H:%m:%S')))
+    fn_ext = plugin_class.filename_extension
+    output_filepath = os.path.join(root_dir, target_dir, "{}.{}".format(base_fn, fn_ext))
+
     with open(output_filepath) as outfile:
         wrapper = FileWrapper(outfile)
         response = HttpResponse(wrapper, content_type='text/markdown; charset=UTF-8')
