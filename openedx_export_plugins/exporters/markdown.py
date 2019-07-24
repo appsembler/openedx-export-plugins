@@ -55,7 +55,11 @@ class MarkdownCourseExportManager(base.PluggableCourseExportManager):
         xslt_root = etree.XML(xsl_sheet, parser)
         transform = etree.XSLT(xslt_root)
         dt = datetime.datetime.now()
-        result_tree = transform(root, baseURL="'{}/'".format(settings.LMS_ROOT_URL), curDateTime="'{}'".format(dt))
+        course_id = export_fs.sub_dir.replace('/', '')
+        result_tree = transform(
+            root, baseURL="'{}/'".format(settings.LMS_ROOT_URL),
+            curDateTime="'{}'".format(dt), courseID="'{}'".format(course_id)
+        )
         # print(str(result_tree))
         return result_tree
 
