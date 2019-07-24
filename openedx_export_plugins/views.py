@@ -51,7 +51,7 @@ def plugin_export_handler(request, course_key_string, plugin_name):
     output_filepath = os.path.join(root_dir, target_dir, "output.{}".format(fn_ext))
     response_fn = "{}_{}.{}".format(
         course_key_string,
-        str(datetime.datetime.now()),
+        datetime.datetime.now().strftime('%Y-%m-%d'),
         fn_ext
     )
 
