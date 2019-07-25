@@ -43,14 +43,15 @@ def plugin_export_handler(request, course_key_string, plugin_name):
         raise HttpResponse(status=406)
 
     root_dir = mkdtemp()
-    target_dir = os.path.normpath(course_key_string.replace('/', '+'))
+    course_key_normalized = course_key_string.replace('/', '+')
+    target_dir = os.path.normpath(course_key_normalized)
     exporter = plugin_class(modulestore(), contentstore(), course_key, root_dir, target_dir)
     exporter.export()
 
     fn_ext = exporter.filename_extension
     output_filepath = os.path.join(root_dir, target_dir, "output.{}".format(fn_ext))
     response_fn = "{}_{}.{}".format(
-        course_key_string,
+        course_key_normalized,
         datetime.datetime.now().strftime('%Y-%m-%d'),
         fn_ext
     )
