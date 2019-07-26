@@ -102,7 +102,7 @@ def plugin_export_handler(request, plugin_name, course_key_string=None):
             return response
     else:
         # return a zip archive of all export files in the response
-        zipfn = 'all_courses_as_{}_{}.zip'.format(fn_ext, datetime.datetime.now().strftime('%Y-%m-%d'))
+        zipfn = os.path.join(mkdtemp(), 'all_courses_as_{}_{}.zip'.format(fn_ext, datetime.datetime.now().strftime('%Y-%m-%d')))
         with zipfile.ZipFile(zipfn, 'w') as response_zip:
             for file in response_files:
                 response_zip.write(filename=file[0], arcname=file[1])
