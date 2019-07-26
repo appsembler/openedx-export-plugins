@@ -10,13 +10,15 @@ import zipfile
 
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
-from wsgiref.util import FileWrapper
 from django.http import HttpResponse, Http404
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
+from wsgiref.util import FileWrapper
 
-from xmodule.modulestore.django import modulestore
 from xmodule.contentstore.django import contentstore
+from xmodule.exceptions import SerializationError
+from xmodule.modulestore.django import modulestore
+
 from opaque_keys.edx.keys import CourseKey
 from openedx.core.lib.api import plugins
 from student.auth import has_course_author_access
@@ -68,7 +70,14 @@ def plugin_export_handler(request, plugin_name, course_key_string=None):
         course_key_normalized = str(course_key).replace('/', '+')
         target_dir = os.path.normpath(course_key_normalized)
         exporter = plugin_class(modulestore(), contentstore(), course_key, root_dir, target_dir)
-        exporter.export()
+        try:
+            exporter.export()
+        except SerializationError as e:
+            if len(course_keys == 1):
+                raise
+            else:
+                logger.warn('Could not export {} due to core OLX export error {}. Skipping.'.format(course_key, e.message))
+                continue
 
         fn_ext = exporter.filename_extension
         output_filepath = os.path.join(root_dir, target_dir, "output.{}".format(fn_ext))
