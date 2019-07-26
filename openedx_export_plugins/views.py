@@ -73,7 +73,7 @@ def plugin_export_handler(request, plugin_name, course_key_string=None):
         try:
             exporter.export()
         except SerializationError as e:
-            if len(course_keys == 1):
+            if len(course_keys) == 1:
                 raise
             else:
                 logger.warn('Could not export {} due to core OLX export error {}. Skipping.'.format(course_key, e.message))
