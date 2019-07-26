@@ -51,7 +51,10 @@ class ExportFSResolver(etree.Resolver):
                     with open(path) as f:
                         contents = f.read()
                         html_tree = etree.HTML(contents)
-                        return self.resolve_string(etree.tostring(html_tree), context)
+                        if html_tree is not None:
+                            return self.resolve_string(etree.tostring(html_tree), context)
+                        else:
+                            return self.resolve_empty(context)
                 else:
                         etree.parse(path)  # validate parseability
                         return self.resolve_filename(path, context)
