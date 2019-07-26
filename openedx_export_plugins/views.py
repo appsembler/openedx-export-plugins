@@ -1,11 +1,16 @@
+"""
+Views for export plugins.
+"""
+
 import datetime
+import logging
 import os
-import shutil
 from tempfile import mkdtemp
+import zipfile
 
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
-from django.core.servers.basehttp import FileWrapper
+from wsgiref.util import FileWrapper
 from django.http import HttpResponse, Http404
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
@@ -20,45 +25,81 @@ from util.views import ensure_valid_course_key
 from .plugins import CourseExporterPluginManager
 
 
+logger = logging.getLogger(__name__)
+
+
 @ensure_csrf_cookie
 @login_required
 @require_http_methods(("GET",))
 @ensure_valid_course_key
-def plugin_export_handler(request, course_key_string, plugin_name):
+def plugin_export_handler(request, plugin_name, course_key_string=None):
     """
-    The restful handler for exporting a course with an exporter plugin.
+    The restful handler for exporting a course, or all courses, with an exporter plugin.
+    Passing no course key string will export all courses to which the user has access
     """
-    course_key = CourseKey.from_string(course_key_string)
-
-    if not has_course_author_access(request.user, course_key):
-        raise PermissionDenied()
-
-    courselike_module = modulestore().get_course(course_key)
-    if courselike_module is None:
-        raise Http404
-
+    store = modulestore()
     try:
         plugin_class = CourseExporterPluginManager.get_plugin(plugin_name)
     except plugins.PluginError:
-        raise HttpResponse(status=406)
+        raise Http404
 
-    root_dir = mkdtemp()
-    course_key_normalized = course_key_string.replace('/', '+')
-    target_dir = os.path.normpath(course_key_normalized)
-    exporter = plugin_class(modulestore(), contentstore(), course_key, root_dir, target_dir)
-    exporter.export()
+    if course_key_string:
+        course_keys = (CourseKey.from_string(course_key_string),)
+    else:
+        courses = store.get_courses()
+        course_keys = [course.id for course in courses]
 
-    fn_ext = exporter.filename_extension
-    output_filepath = os.path.join(root_dir, target_dir, "output.{}".format(fn_ext))
-    response_fn = "{}_{}.{}".format(
-        course_key_normalized,
-        datetime.datetime.now().strftime('%Y-%m-%d'),
-        fn_ext
-    )
+    outfiles = []
+    response_fns = []
 
-    with open(output_filepath) as outfile:
-        wrapper = FileWrapper(outfile)
-        response = HttpResponse(wrapper, content_type='text/markdown; charset=UTF-8')
-        response['Content-Disposition'] = 'attachment; filename=%s' % os.path.basename(response_fn.encode('utf-8'))
-        response['Content-Length'] = os.path.getsize(outfile.name)
-        return response
+    for course_key in course_keys:
+        if not has_course_author_access(request.user, course_key):
+            if len(course_keys) == 1:
+                raise PermissionDenied()
+            else:
+                logger.warn('User {} has no access to export {}'.format(request.user, course_key))
+                continue
+
+        courselike_module = store.get_course(course_key)
+        if courselike_module is None:
+            raise Http404  # this should only ever happen if a course_key_string is passed
+
+        root_dir = mkdtemp()
+        course_key_normalized = str(course_key).replace('/', '+')
+        target_dir = os.path.normpath(course_key_normalized)
+        exporter = plugin_class(modulestore(), contentstore(), course_key, root_dir, target_dir)
+        exporter.export()
+
+        fn_ext = exporter.filename_extension
+        output_filepath = os.path.join(root_dir, target_dir, "output.{}".format(fn_ext))
+        outfiles.append(output_filepath)
+        response_fn = "{}_{}.{}".format(
+            course_key_normalized,
+            datetime.datetime.now().strftime('%Y-%m-%d'),
+            fn_ext
+        )
+        response_fns.append(response_fn)
+
+    response_files = list(zip(outfiles, response_fns))
+
+    if len(response_files) == 1:
+        # return a single export file in the response
+        with open(response_files[0][0]) as outfile:
+            response_fn = response_files[0][1]
+            wrapper = FileWrapper(outfile)
+            response = HttpResponse(wrapper, content_type='text/markdown; charset=UTF-8')
+            response['Content-Disposition'] = 'attachment; filename={}'.format(os.path.basename(response_fn.encode('utf-8')))
+            response['Content-Length'] = os.path.getsize(outfile.name)
+            return response
+    else:
+        # return a zip archive of all export files in the response
+        zipfn = 'all_courses_as_{}_{}.zip'.format(fn_ext, datetime.datetime.now().strftime('%Y-%m-%d'))
+        with zipfile.ZipFile(zipfn, 'w') as response_zip:
+            for file in response_files:
+                response_zip.write(filename=file[0], arcname=file[1])
+        with open(zipfn, 'r') as response_zip:
+            wrapper = FileWrapper(response_zip)
+            response = HttpResponse(wrapper, content_type='application/zip; charset=UTF-8')
+            response['Content-Disposition'] = 'attachment; filename={}'.format(os.path.basename(zipfn.encode('utf-8')))
+            response['Content-Length'] = os.path.getsize(zipfn)
+            return response
