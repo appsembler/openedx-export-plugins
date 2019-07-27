@@ -66,7 +66,7 @@ def _export_courses_multiple(user, plugin_class, course_keys, response_zip):
         try:
             (outfilepath, response_fn) = _do_course_export(user, plugin_class, course_key)
             response_zip.write(filename=outfilepath, arcname=response_fn)
-        except SerializationError:
+        except SerializationError as e:
             logger.warn('Could not export {} due to core OLX export error {}. Skipping.'.format(course_key, e.message))
             continue
 
