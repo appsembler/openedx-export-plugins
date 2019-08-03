@@ -62,10 +62,11 @@ def _export_courses_multiple(user, plugin_class, course_keys, response_tar):
         manifest.writelines([str(key)+'\n' for key in course_keys])
     response_tar.add(fpath, arcname="manifest.txt")
 
-    response_tar.clos    tarf = response_tar.fileobj.name
+    response_tar.close()
+    tarf = response_tar.fileobj.name
     with open(tarf, 'rb') as tar_read:
         yield tar_read.read(1) # immediately yield a single byte to keep the HTTPStreaming connection open
- 
+
     response_tar = tarfile.open(response_tar.fileobj.name, "a:")  # reopen for appending
 
     for course_key in course_keys:
