@@ -6,7 +6,8 @@ import datetime
 import logging
 import os
 from tempfile import mkdtemp
-import zipfile
+import shutil
+import tarfile
 
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
@@ -51,12 +52,21 @@ def _export_course_single(user, plugin_class, course_key):
         return response
 
 
-def _export_courses_multiple(user, plugin_class, course_keys, response_zip):
+def _export_courses_multiple(user, plugin_class, course_keys, response_tar):
     """
-    Generate a Zip file with multiple course exports
+    Generate a tarball with multiple course exports
     """
-    # immediately yield some bytes to keep the HTTPStreaming connection open
-    # yield " " * 1024
+    tmpdir = mkdtemp()
+    fpath = os.path.join(tmpdir, "manifest.txt")
+    with open(fpath, "w") as manifest:
+        manifest.writelines([str(key)+'\n' for key in course_keys])
+    response_tar.add(fpath, arcname="manifest.txt")
+
+    response_tar.clos    tarf = response_tar.fileobj.name
+    with open(tarf, 'rb') as tar_read:
+        yield tar_read.read(1) # immediately yield a single byte to keep the HTTPStreaming connection open
+ 
+    response_tar = tarfile.open(response_tar.fileobj.name, "a:")  # reopen for appending
 
     for course_key in course_keys:
         if not has_course_author_access(user, course_key):
@@ -65,15 +75,18 @@ def _export_courses_multiple(user, plugin_class, course_keys, response_zip):
 
         try:
             (outfilepath, response_fn) = _do_course_export(user, plugin_class, course_key)
-            response_zip.write(filename=outfilepath, arcname=response_fn)
+            response_tar.add(outfilepath, arcname=response_fn)
+
         except SerializationError as e:
             logger.warn('Could not export {} due to core OLX export error {}. Skipping.'.format(course_key, e.message))
             continue
 
-    zipfn = response_zip.fp.name
-    response_zip.close()
-    with open(zipfn) as zipf:
-        yield zipf.read()
+    bytepos = response_tar.fileobj.tell()
+    response_tar.close()
+    with open(tarf, 'rb') as tar_read:
+        # tar_read.seek(bytepos)
+        tar_read.seek(1)
+        yield tar_read.read()
 
 
 def _do_course_export(user, plugin_class, course_key):
@@ -123,13 +136,13 @@ def plugin_export_handler(request, plugin_name, course_key_string=None):
     if len(course_keys) == 1:
         return _export_course_single(request.user, plugin_class, course_keys[0])
     else:
-        # TODO: really we should pass this off to Celery and make a view to list and download the ...
+        # TODO: really we should pass this off to Celery and make a view to list and download the
         # completed file simliar to Instructor dashboard.  This is a shortcut until then.
         # if exporting all files, stream the response back to avoid proxy timeout at front-end webserver
-        # return a zip archive of all export files in the response
+        # return a tarball of all export files in the response
         exporter = plugin_class(modulestore(), contentstore(), course_keys[0], "/tmp", "")  # just to get extension
-        zipfn = os.path.join(mkdtemp(), 'all_courses_as_{}_{}.zip'.format(exporter.filename_extension, datetime.datetime.now().strftime('%Y-%m-%d')))
-        response_zip = zipfile.ZipFile(zipfn, 'w')
-        response = FileResponse(_export_courses_multiple(request.user, plugin_class, course_keys, response_zip), content_type='application/zip')
-        response['Content-Disposition'] = 'attachment; filename={}'.format(os.path.basename(zipfn.encode('utf-8')))
+        tarfn = os.path.join(mkdtemp(), 'all_courses_as_{}_{}.tar'.format(exporter.filename_extension, datetime.datetime.now().strftime('%Y-%m-%d')))
+        response_tar = tarfile.open(tarfn, 'w:')  # uncompressed
+        response = FileResponse(_export_courses_multiple(request.user, plugin_class, course_keys, response_tar), content_type='application/tar')
+        response['Content-Disposition'] = 'attachment; filename={}'.format(os.path.basename(tarfn.encode('utf-8')))
         return response
