@@ -204,7 +204,7 @@ date: Course exported from <xsl:value-of select="$baseURL" /> at <xsl:value-of s
 <xsl:template name="updates" mode="markdown">
 <xsl:text>----
 
-### UPDATES
+### Course Updates and News
 
 </xsl:text>
 <xsl:apply-templates select="document('tmpfs:info/updates.html')" />
@@ -213,7 +213,7 @@ date: Course exported from <xsl:value-of select="$baseURL" /> at <xsl:value-of s
 <xsl:template name="handouts" mode="markdown">
 <xsl:text>----
 
-### HANDOUTS
+### Handouts
 
 </xsl:text>
 <xsl:apply-templates select="document('tmpfs:info/handouts.html')" />
@@ -224,7 +224,7 @@ date: Course exported from <xsl:value-of select="$baseURL" /> at <xsl:value-of s
 <xsl:text>----
 ----
 
-### ASSETS
+### Assets
 
 </xsl:text>
 <xsl:value-of select="document('assets:policies/assets.json')" />
