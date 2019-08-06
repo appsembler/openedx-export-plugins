@@ -3,6 +3,7 @@ Views for export plugins.
 """
 
 import datetime
+import io
 import logging
 import os
 from tempfile import mkdtemp
@@ -11,10 +12,10 @@ import tarfile
 
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
-from django.http import FileResponse, HttpResponse, Http404
+from django.core.servers.basehttp import FileWrapper
+from django.http import FileResponse, HttpResponse, Http404, StreamingHttpResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
-from wsgiref.util import FileWrapper
 
 from xmodule.contentstore.django import contentstore
 from xmodule.exceptions import SerializationError
@@ -52,42 +53,51 @@ def _export_course_single(user, plugin_class, course_key):
         return response
 
 
-def _export_courses_multiple(user, plugin_class, course_keys, response_tar):
+def _export_courses_multiple(user, plugin_class, course_keys, tarf):
     """
-    Generate a tarball with multiple course exports
+    Generate tarball data from multiple course exports
     """
-    tmpdir = mkdtemp()
-    fpath = os.path.join(tmpdir, "manifest.txt")
-    with open(fpath, "w") as manifest:
-        manifest.writelines([str(key)+'\n' for key in course_keys])
-    response_tar.add(fpath, arcname="manifest.txt")
 
-    response_tar.close()
-    tarf = response_tar.fileobj.name
-    with open(tarf, 'rb') as tar_read:
-        yield tar_read.read(1) # immediately yield a single byte to keep the HTTPStreaming connection open
+    def _get_tar_record_bytes(tarinfo, src_file_path):
+        tar_header = tarinfo.tobuf(response_tar.format, response_tar.encoding, response_tar.errors)
 
-    response_tar = tarfile.open(response_tar.fileobj.name, "a:")  # reopen for appending
+        # replicating behavior of TarFile.add
+        tar_data = io.BytesIO()
+        with open(src_file_path, "r") as src:
+            shutil.copyfileobj(src, tar_data, length=tarinfo.size)
+            blocks, remainder = divmod(tarinfo.size, tarfile.BLOCKSIZE)
+            if remainder > 0:
+                tar_data.write(tarfile.NUL * (tarfile.BLOCKSIZE - remainder))
+
+        return (tar_header, tar_data.getvalue())
+
+    def _get_tar_end_padding_bytes():
+        """tar files are finished with two blocks of zeros."""
+        pad_data = io.BytesIO()
+        pad_data.write(tarfile.NUL * (tarfile.BLOCKSIZE * 2))
+        return pad_data.getvalue()
+
+    response_tar = tarfile.open(tarf, "w:")
 
     for course_key in course_keys:
         if not has_course_author_access(user, course_key):
             logger.warn('User {} has no access to export {}'.format(user, course_key))
             continue
-
         try:
             (outfilepath, response_fn) = _do_course_export(user, plugin_class, course_key)
-            response_tar.add(outfilepath, arcname=response_fn)
+
+            # yield tar format data bit by bit,...
+            tarinfo = response_tar.gettarinfo(name=outfilepath, arcname=response_fn)
+            (tar_hd, tar_data) = _get_tar_record_bytes(tarinfo, outfilepath)
+            yield tar_hd
+            yield tar_data
 
         except SerializationError as e:
             logger.warn('Could not export {} due to core OLX export error {}. Skipping.'.format(course_key, e.message))
             continue
 
-    bytepos = response_tar.fileobj.tell()
-    response_tar.close()
-    with open(tarf, 'rb') as tar_read:
-        # tar_read.seek(bytepos)
-        tar_read.seek(1)
-        yield tar_read.read()
+    # ...now add the padding to mark the end of the tarfile
+    yield _get_tar_end_padding_bytes()
 
 
 def _do_course_export(user, plugin_class, course_key):
@@ -142,8 +152,8 @@ def plugin_export_handler(request, plugin_name, course_key_string=None):
         # if exporting all files, stream the response back to avoid proxy timeout at front-end webserver
         # return a tarball of all export files in the response
         exporter = plugin_class(modulestore(), contentstore(), course_keys[0], "/tmp", "")  # just to get extension
-        tarfn = os.path.join(mkdtemp(), 'all_courses_as_{}_{}.tar'.format(exporter.filename_extension, datetime.datetime.now().strftime('%Y-%m-%d')))
-        response_tar = tarfile.open(tarfn, 'w:')  # uncompressed
-        response = FileResponse(_export_courses_multiple(request.user, plugin_class, course_keys, response_tar), content_type='application/tar')
-        response['Content-Disposition'] = 'attachment; filename={}'.format(os.path.basename(tarfn.encode('utf-8')))
+        tarf = os.path.join(mkdtemp(), 'all_courses_as_{}_{}.tar'.format(exporter.filename_extension, datetime.datetime.now().strftime('%Y-%m-%d')))
+        # response = FileResponse(_export_courses_multiple(request.user, plugin_class, course_keys, response_tar), content_type='application/tar')
+        response = StreamingHttpResponse(_export_courses_multiple(request.user, plugin_class, course_keys, tarf), content_type='application/tar')
+        response['Content-Disposition'] = 'attachment; filename={}'.format(os.path.basename(tarf.encode('utf-8')))
         return response
