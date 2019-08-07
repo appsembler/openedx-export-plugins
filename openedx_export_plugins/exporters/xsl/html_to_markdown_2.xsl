@@ -279,13 +279,21 @@
 	<xsl:text>**</xsl:text>
 </xsl:template>
 
-<xsl:template match="(strong|b)/(em|i)" mode="markdown">
+<xsl:template match="*[self::i or self::em][child::b or child::strong]" mode="markdown">
+	<xsl:apply-templates select="b | strong | text()" mode="markdown"/>
+</xsl:template>
+
+<xsl:template match="*[self::b or self::strong][parent::i or parent::em]" mode="markdown">
 	<xsl:text>***</xsl:text>
 	<xsl:apply-templates select="* | text()" mode="markdown"/>
 	<xsl:text>***</xsl:text>
 </xsl:template>
 
-<xsl:template match="(em|i)/(strong|b)" mode="markdown">
+<xsl:template match="*[self::b or self::strong][child::em or child::i]" mode="markdown">
+	<xsl:apply-templates select="em | i | text()" mode="markdown"/>
+</xsl:template>
+
+<xsl:template match="*[self::em or self::i][parent::b or parent::strong]" mode="markdown">
 	<xsl:text>***</xsl:text>
 	<xsl:apply-templates select="* | text()" mode="markdown"/>
 	<xsl:text>***</xsl:text>
