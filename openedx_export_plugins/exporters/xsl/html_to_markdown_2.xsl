@@ -618,7 +618,12 @@
 	<xsl:choose>
 		<xsl:when test="position() = last()">
 			<!-- md-pipe doesn't support multiline cells so we just select all of the text which isn't the best -->
-			<xsl:value-of select="normalize-space(.)" mode="markdown" />
+			<!-- <xsl:value-of select="normalize-space(.)" mode="markdown" /> -->
+			<xsl:call-template name="strip-line-breaks">
+				<xsl:with-param name="string">
+					<xsl:apply-templates select="* | text()" mode="markdown"/>
+				</xsl:with-param>
+			</xsl:call-template>
 		</xsl:when>
 		<xsl:otherwise>
 			<xsl:value-of select="normalize-space(.)" mode="markdown" /><xsl:text>|</xsl:text>
@@ -649,6 +654,11 @@
 			<xsl:with-param name="count" select="$count + 1"/>
 		</xsl:call-template>
 	</xsl:if>
+</xsl:template>
+
+<xsl:template name="strip-line-breaks">
+	<xsl:param name="string"/>
+	<xsl:value-of select="normalize-space($string)" />
 </xsl:template>
 
 <xsl:template name="strip-trailing-line-breaks">
