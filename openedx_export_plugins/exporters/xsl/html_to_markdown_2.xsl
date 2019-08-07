@@ -279,7 +279,7 @@
 	<xsl:text>**</xsl:text>
 </xsl:template>
 
-<xsl:template match="em/text() | i/text() | b/text() | strong/text()" mode="markdown">
+<xsl:template match="em//text() | i//text() | b//text() | strong//text()" mode="markdown">
     <xsl:value-of select="normalize-space()"/>
 </xsl:template>
 
