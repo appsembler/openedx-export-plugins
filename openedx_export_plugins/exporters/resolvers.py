@@ -48,6 +48,8 @@ class ExportFSResolver(etree.Resolver):
                 if '.html' in path:
                     # we have to turn it into proper XHTML
                     # mostly they are invalid fragments without enclosing <html>
+                    if 'updates' in path:
+                        import pdb; pdb.set_trace()
                     with open(path) as f:
                         contents = f.read()
                         html_tree = etree.HTML(contents)
@@ -96,6 +98,32 @@ class ExportFSPolicyTabsJSONResolver(ExportFSResolver):
                         with open(os.path.join(self.fs.getsyspath('tabs'), '{}.html'.format(tab['url_slug']))) as html:
                             tabs_xml += u"\n<h2>{}</h2>".format(tab['name']) + '\n' + html.read().decode('utf-8') + "<hr/>"
                     return self.resolve_string(u"<xml>{}</xml>".format(tabs_xml), context)
+                else:
+                    return self.resolve_empty(context)
+        else:
+            return self.resolve_empty(context)
+
+
+class ExportFSUpdatesJSONResolver(ExportFSResolver):
+    """
+    Resolve updates info/updates.items.json file using custom parsing
+    """
+    def resolve(self, url, id, context):
+        if not url.startswith('updates:'):
+            return None   # move on to next Resolver
+
+        path = self.fs.getsyspath(url.replace('updates:', '', 1))
+
+        if os.path.exists(path):
+            with open(path) as f:
+                updates_json = json.load(f)
+                if len(updates_json):
+                    updates_xml = ""
+                    for update in updates_json:
+                        if update['status'] == 'visible':
+                            updates_xml += "<h4>{}</h4>".format(update['date'])
+                            updates_xml += update['content']
+                    return self.resolve_string(u"<xml>{}</xml>".format(updates_xml), context)
                 else:
                     return self.resolve_empty(context)
         else:

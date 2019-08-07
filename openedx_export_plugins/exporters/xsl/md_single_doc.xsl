@@ -207,6 +207,7 @@ date: Course exported from <xsl:value-of select="$baseURL" /> at <xsl:value-of s
 ### Course Updates and News
 
 </xsl:text>
+<xsl:apply-templates select="document('updates:info/updates.items.json')" />
 <xsl:apply-templates select="document('tmpfs:info/updates.html')" />
 </xsl:template>
 
