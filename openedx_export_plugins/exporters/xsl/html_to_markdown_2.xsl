@@ -279,6 +279,18 @@
 	<xsl:text>**</xsl:text>
 </xsl:template>
 
+<xsl:template match="(strong|b)/(em|i)" mode="markdown">
+	<xsl:text>***</xsl:text>
+	<xsl:apply-templates select="* | text()" mode="markdown"/>
+	<xsl:text>***</xsl:text>
+</xsl:template>
+
+<xsl:template match="(em|i)/(strong|b)" mode="markdown">
+	<xsl:text>***</xsl:text>
+	<xsl:apply-templates select="* | text()" mode="markdown"/>
+	<xsl:text>***</xsl:text>
+</xsl:template>
+
 <xsl:template match="em//text() | i//text() | b//text() | strong//text()" mode="markdown">
     <xsl:value-of select="normalize-space()"/>
 </xsl:template>
