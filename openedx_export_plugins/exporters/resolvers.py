@@ -48,8 +48,6 @@ class ExportFSResolver(etree.Resolver):
                 if '.html' in path:
                     # we have to turn it into proper XHTML
                     # mostly they are invalid fragments without enclosing <html>
-                    if 'updates' in path:
-                        import pdb; pdb.set_trace()
                     with open(path) as f:
                         contents = f.read()
                         html_tree = etree.HTML(contents)
