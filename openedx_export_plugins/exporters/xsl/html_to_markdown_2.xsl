@@ -270,13 +270,13 @@
 <xsl:template match="em|i" mode="markdown">
 	<xsl:text>_</xsl:text>
 	<xsl:apply-templates select="* | text()" mode="markdown"/>
-	<xsl:text>_</xsl:text>
+	<xsl:text>_ </xsl:text>
 </xsl:template>
 
 <xsl:template match="strong|b" mode="markdown">
 	<xsl:text>**</xsl:text>
 	<xsl:apply-templates select="* | text()" mode="markdown"/>
-	<xsl:text>**</xsl:text>
+	<xsl:text>** </xsl:text>
 </xsl:template>
 
 <xsl:template match="*[self::i or self::em][child::b or child::strong]" mode="markdown">
@@ -286,7 +286,7 @@
 <xsl:template match="*[self::b or self::strong][parent::i or parent::em]" mode="markdown">
 	<xsl:text>***</xsl:text>
 	<xsl:apply-templates select="* | text()" mode="markdown"/>
-	<xsl:text>***</xsl:text>
+	<xsl:text>*** </xsl:text>
 </xsl:template>
 
 <xsl:template match="*[self::b or self::strong][child::em or child::i]" mode="markdown">
@@ -296,7 +296,7 @@
 <xsl:template match="*[self::em or self::i][parent::b or parent::strong]" mode="markdown">
 	<xsl:text>***</xsl:text>
 	<xsl:apply-templates select="* | text()" mode="markdown"/>
-	<xsl:text>***</xsl:text>
+	<xsl:text>*** </xsl:text>
 </xsl:template>
 
 <xsl:template match="em//text() | i//text() | b//text() | strong//text()" mode="markdown">
