@@ -459,6 +459,17 @@
 	</xsl:if><!-- always add line breaks unless in anchor tag -->
 </xsl:template>
 
+
+<xsl:template match="a[img]" mode="markdown">
+	<!-- Pandoc doesn't support hyperlinked images so output the link afterward as text -->
+	<xsl:apply-templates select="*" mode="markdown" />
+	<xsl:text>&#xA;[link](</xsl:text>
+	<xsl:call-template name="evalHref">
+		<xsl:with-param name="url" select="@href"/>
+	</xsl:call-template>
+	<xsl:text>)</xsl:text>
+</xsl:template>
+
 <!-- blockquotes -->
 
 <xsl:template match="blockquote" mode="markdown">
