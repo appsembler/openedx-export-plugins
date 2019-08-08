@@ -294,13 +294,15 @@
 </xsl:template>
 
 <xsl:template match="*[self::em or self::i][parent::b or parent::strong]" mode="markdown">
-	<xsl:text>***</xsl:text>
-	<xsl:apply-templates select="* | text()" mode="markdown"/>
-	<xsl:text>*** </xsl:text>
+	<xsl:text>***</xsl:text><xsl:apply-templates select="* | text()" mode="markdown"/><xsl:text>*** </xsl:text>
 </xsl:template>
 
 <xsl:template match="em//text() | i//text() | b//text() | strong//text()" mode="markdown">
-    <xsl:value-of select="normalize-space()"/>
+    <xsl:call-template name="strip-spaces">
+		<xsl:with-param name="string">
+			<xsl:value-of select="."/>
+		</xsl:with-param>
+    </xsl:call-template>
 </xsl:template>
 
 <!-- unordered lists -->
@@ -698,6 +700,13 @@
 			</xsl:choose>		
 		</xsl:otherwise>
 	</xsl:choose>
+</xsl:template>
+
+<!-- remove xml entities for spacing -->
+<xsl:template name="strip-spaces">
+	<xsl:param name="string"/>
+	<!-- remove &ensp; &emsp; &thinsp; -->
+	<xsl:value-of select="normalize-space(translate($string, '&#8194;&#8195;&#8201;', ''))"/>
 </xsl:template>
 
 </xsl:stylesheet>
