@@ -454,9 +454,9 @@
 			</xsl:if>
 		</xsl:otherwise>
 	</xsl:choose>
-	<xsl:if test="parent::*[not(self::a)]">
+	<!-- <xsl:if test="parent::*[not(self::a)]"> -->
 		<xsl:text>&#xA;&#xA;</xsl:text>
-	</xsl:if><!-- always add line breaks unless in anchor tag -->
+	<!-- </xsl:if> -->
 </xsl:template>
 
 
