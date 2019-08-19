@@ -10,8 +10,7 @@ import os
 
 from lxml import etree
 
-from django.conf import settings
-
+from .. import app_settings
 from . import base, resolvers
 
 
@@ -58,7 +57,7 @@ class MarkdownCourseExportManager(base.PluggableCourseExportManager):
         dt = datetime.datetime.now()
         course_id = export_fs.sub_dir.replace('/', '')
         result_tree = transform(
-            root, baseURL="'{}/'".format(settings.LMS_ROOT_URL),
+            root, baseURL="'{}/'".format(app_settings.LMS_ROOT_URL),
             curDateTime="'{}'".format(dt), courseID="'{}'".format(course_id)
         )
         # print(str(result_tree))
