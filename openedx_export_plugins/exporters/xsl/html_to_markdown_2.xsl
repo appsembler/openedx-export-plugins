@@ -103,8 +103,8 @@
 
 <!-- here we go -->
 
-<xsl:template match="*" mode="markdown">
-	<xsl:apply-templates select="*" mode="markdown"/>
+<xsl:template match="node()" mode="markdown">
+	<xsl:apply-templates select="node()" mode="markdown"/>
 </xsl:template>
 
 <!-- whitespace handling | escape number-period-space-sequences-->
