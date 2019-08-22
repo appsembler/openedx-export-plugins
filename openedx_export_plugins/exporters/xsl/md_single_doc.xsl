@@ -41,8 +41,6 @@
     <xsl:apply-templates mode="markdown"/>
   </xsl:template>
 
-  <xsl:template match="comment()"/>
-
   <!-- whitespace-only text node to explicit line break -->
   <xsl:template match="text()[not(normalize-space())]">
       <xsl:text>&#10;</xsl:text>

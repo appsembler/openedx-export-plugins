@@ -101,11 +101,19 @@
 	</xsl:attribute>
 </xsl:template>
 
+
 <!-- here we go -->
 
-<xsl:template match="node()" mode="markdown">
-	<xsl:apply-templates select="node()" mode="markdown"/>
+<xsl:template match="text()|*" mode="markdown">
+	<xsl:apply-templates select="text()|*" mode="markdown"/>
 </xsl:template>
+
+<!-- exclusions -->
+<xsl:template match="head" mode="markdown" />
+<xsl:template match="script" mode="markdown"/>
+<xsl:template match="style" mode="markdown"/>
+<xsl:template match="comment()" mode="markdown"/>
+
 
 <!-- whitespace handling | escape number-period-space-sequences-->
 
