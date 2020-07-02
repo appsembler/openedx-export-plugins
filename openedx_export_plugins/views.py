@@ -22,7 +22,7 @@ from opaque_keys.edx.keys import CourseKey
 from openedx.core.lib.api import plugins
 from util.views import ensure_valid_course_key
 
-from . import core
+from . import constants, core
 from .plugins import CourseExporterPluginManager
 
 
@@ -67,8 +67,7 @@ def plugin_export_handler(request, plugin_name, course_key_string=None):
         # return a tarball of all export files in the response
         outfilename = constants.EXPORT_FILENAME_FORMAT_MULTIPLE.format(
             plugin_class.filename_extension,
-            datetime.datetime.now().strftime('%Y-%m-%d'),
-            ''
+            datetime.datetime.now().strftime('%Y-%m-%d')
         )
         response = StreamingHttpResponse(
             core.export_courses_multiple(request.user, plugin_class, course_keys, outfilename, stream=True),

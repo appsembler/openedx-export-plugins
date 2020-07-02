@@ -17,6 +17,8 @@ from xmodule.modulestore.django import modulestore
 
 from student.auth import has_course_author_access
 
+from . import exceptions
+
 
 def export_course_single(user, plugin_class, course_key):
     """
@@ -25,31 +27,48 @@ def export_course_single(user, plugin_class, course_key):
     if not has_course_author_access(user, course_key):
         raise PermissionDenied()
 
-    try:
-        (outfilepath, out_fn) = _do_course_export(user, plugin_class, course_key)
-    except SerializationError:
-        raise  # TODO: maybe do something better here
-
-    # return a single export file in the response
+    (outfilepath, out_fn) = _do_course_export(plugin_class, course_key)
     return (outfilepath, out_fn)
 
-def export_courses_multiple(user, plugin_class, course_keys, outfilename, stream=False):
+
+def export_courses_multiple(user, plugin_class, course_keys, outfilename, stream=False, check_author_perms=True):
     """
-    Build a tar file from multi-course export and either yield its bytes to stream 
-    or return a finished gzipped tar file.
+    Build a tar file from multi-course export and either yield its bytes to stream
+    or yield a finished gzipped tar file.
     """
+    if not stream:
+        outfilename += ".gz"
     tarf = os.path.join(mkdtemp(), outfilename)
-    with tarfile.open(tarf, "w:") as out_tar:
-        for tar_bytes in courses_tar_bytes(user, plugin_class, course_keys, out_tar):
-            if stream:
-                yield tar_bytes            
-            else:
-                out_tar.write(tar_bytes)
-        if not stream:
+    write_method = "w:" if stream else "w:gz"
+    with tarfile.open(tarf, write_method) as out_tar:
+        for course_key in course_keys:
+            if check_author_perms:
+                if not has_course_author_access(user, course_key):
+                    logger.warn('User {} has no access to export {}'.format(user, course_key))
+                    continue
+            try:
+                if stream:
+                    for tar_bytes in course_tar_bytes(user, plugin_class, course_key, out_tar):
+                        yield tar_bytes
+                else:
+                    output_filepath, out_fn = _do_course_export(plugin_class, course_key)
+                    out_tar.add(output_filepath, out_fn)
+            except exceptions.ExportPluginsCourseExportError:
+                continue
+        if stream:
+            yield _get_tar_end_padding_bytes()
+        else:
             yield out_tar
 
 
-def courses_tar_bytes(user, plugin_class, course_keys, out_tar):
+def _get_tar_end_padding_bytes():
+    """tar files are finished with two blocks of zeros."""
+    pad_data = io.BytesIO()
+    pad_data.write(tarfile.NUL * (tarfile.BLOCKSIZE * 2))
+    return pad_data.getvalue()
+
+
+def course_tar_bytes(user, plugin_class, course_key, out_tar):
     """
     Generate tarball data from multiple course exports
     """
@@ -67,34 +86,15 @@ def courses_tar_bytes(user, plugin_class, course_keys, out_tar):
 
         return (tar_header, tar_data.getvalue())
 
-    def _get_tar_end_padding_bytes():
-        """tar files are finished with two blocks of zeros."""
-        pad_data = io.BytesIO()
-        pad_data.write(tarfile.NUL * (tarfile.BLOCKSIZE * 2))
-        return pad_data.getvalue()
+    (outfilepath, out_fn) = _do_course_export(plugin_class, course_key)
 
-    for course_key in course_keys:
-        if not has_course_author_access(user, course_key):
-            logger.warn('User {} has no access to export {}'.format(user, course_key))
-            continue
-        try:
-            (outfilepath, out_fn) = _do_course_export(user, plugin_class, course_key)
-
-            # yield tar format data bit by bit,...
-            tarinfo = out_tar.gettarinfo(name=outfilepath, arcname=out_fn)
-            (tar_hd, tar_data) = _get_tar_record_bytes(tarinfo, outfilepath)
-            yield tar_hd
-            yield tar_data
-
-        except SerializationError as e:
-            logger.warn('Could not export {} due to core OLX export error {}. Skipping.'.format(course_key, e.message))
-            continue
-
-    # ...now add the padding to mark the end of the tarfile
-    yield _get_tar_end_padding_bytes()
+    tarinfo = out_tar.gettarinfo(name=outfilepath, arcname=out_fn)
+    (tar_hd, tar_data) = _get_tar_record_bytes(tarinfo, outfilepath)
+    yield tar_hd
+    yield tar_data
 
 
-def _do_course_export(user, plugin_class, course_key):
+def _do_course_export(plugin_class, course_key):
     """
     Run the actual export transformation.
     """
@@ -103,7 +103,11 @@ def _do_course_export(user, plugin_class, course_key):
     target_dir = os.path.normpath(course_key_normalized)
     exporter = plugin_class(modulestore(), contentstore(), course_key, root_dir, target_dir)
     fn_ext = exporter.filename_extension
-    exporter.export()
+    try:
+        exporter.export()
+    except SerializationError as e:
+        logger.warn('Could not export {} due to core OLX export error {}. Skipping.'.format(course_key, e.message))
+        raise exceptions.ExportPluginsCourseExportError(e.message)
 
     output_filepath = os.path.join(root_dir, target_dir, "output.{}".format(fn_ext))
     out_fn = "{}_{}.{}".format(
