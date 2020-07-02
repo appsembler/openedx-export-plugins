@@ -65,9 +65,11 @@ def plugin_export_handler(request, plugin_name, course_key_string=None):
     else:
         # if exporting all files, stream the response back to avoid proxy timeout at front-end webserver
         # return a tarball of all export files in the response
-        outfilename = 'all_courses_as_{}_{}.tar'.format(
+        outfilename = constants.EXPORT_FILENAME_FORMAT_MULTIPLE.format(
             plugin_class.filename_extension,
-            datetime.datetime.now().strftime('%Y-%m-%d'))
+            datetime.datetime.now().strftime('%Y-%m-%d'),
+            ''
+        )
         response = StreamingHttpResponse(
             core.export_courses_multiple(request.user, plugin_class, course_keys, outfilename, stream=True),
             content_type='application/tar'
