@@ -5,9 +5,9 @@ Core export functionality.
 import datetime
 import io
 import os
-from tempfile import mkdtemp
 import shutil
 import tarfile
+from tempfile import mkdtemp
 
 from django.core.exceptions import PermissionDenied
 
@@ -48,7 +48,7 @@ def export_courses_multiple(user, plugin_class, course_keys, outfilename, stream
                     continue
             try:
                 if stream:
-                    for tar_bytes in course_tar_bytes(user, plugin_class, course_key, out_tar):
+                    for tar_bytes in _course_tar_bytes(user, plugin_class, course_key, out_tar):
                         yield tar_bytes
                 else:
                     output_filepath, out_fn = _do_course_export(plugin_class, course_key)
@@ -68,7 +68,7 @@ def _get_tar_end_padding_bytes():
     return pad_data.getvalue()
 
 
-def course_tar_bytes(user, plugin_class, course_key, out_tar):
+def _course_tar_bytes(user, plugin_class, course_key, out_tar):
     """
     Generate tarball data from multiple course exports
     """

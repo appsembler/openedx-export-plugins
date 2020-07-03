@@ -16,11 +16,10 @@ from django.http import HttpResponse, Http404, StreamingHttpResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
 
-from xmodule.modulestore.django import modulestore
-
 from opaque_keys.edx.keys import CourseKey
 from openedx.core.lib.api import plugins
 from util.views import ensure_valid_course_key
+from xmodule.modulestore.django import modulestore
 
 from . import constants, core
 from .plugins import CourseExporterPluginManager
