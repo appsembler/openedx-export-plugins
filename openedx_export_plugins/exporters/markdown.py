@@ -23,9 +23,8 @@ class MarkdownCourseExportManager(base.PluggableCourseExportManager):
     with open(os.path.join(os.path.dirname(__file__), 'xsl', 'md_single_doc.xsl'), 'r') as xslf:
         DEFAULT_XSL_STYLESHEET = xslf.read()
 
-    @property
-    def filename_extension(self):
-        return "md"
+    http_content_type = "text/markdown"
+    filename_extension = "md"
 
     def post_process(self, root, export_fs):
         """
