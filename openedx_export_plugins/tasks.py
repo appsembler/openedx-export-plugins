@@ -8,7 +8,6 @@ import os
 
 from celery.decorators import periodic_task
 from celery.schedules import crontab
-from celery_utils.logged_task import LoggedTask
 
 from xmodule.modulestore.django import modulestore
 
@@ -22,7 +21,6 @@ logger = logging.getLogger(__name__)
 
 
 @periodic_task(
-    task=LoggedTask,
     run_every=crontab(**app_settings.COURSE_EXPORT_PLUGIN_TASK_SCHEDULE),
     queue=QUEUE,
     options={'queue': QUEUE}
