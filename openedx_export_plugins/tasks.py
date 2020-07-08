@@ -9,6 +9,8 @@ import os
 from celery.decorators import periodic_task
 from celery.schedules import crontab
 
+from django.core.mail import EmailMessage
+
 from xmodule.modulestore.django import modulestore
 
 from . import app_settings, constants, core, exceptions, storage
@@ -18,6 +20,18 @@ from .plugins import CourseExporterPluginManager
 QUEUE = app_settings.COURSE_EXPORT_PLUGIN_TASK_QUEUE
 
 logger = logging.getLogger(__name__)
+
+
+def _notify_error(plugin, error):
+    dest_addrs = app_settings.COURSE_EXPORT_PLUGIN_TASK_NOTIFY_ON_ERROR
+    if not dest_addrs:
+        return
+    subject = "Open edX course export as {} failed".format(plugin)
+    message = "Course export as {} from {} failed with error: {}".format(
+        plugin, app_settings.LMS_ROOT_URL, error.message
+    )
+    mail = EmailMessage(subject, message, to=dest_addrs)
+    mail.send()
 
 
 @periodic_task(
@@ -30,14 +44,17 @@ def export_all_courses():
         try:
             export_all_courses_as(plugin)
         except exceptions.ExportPluginsCourseExportError as e:
+            # any single course not exporting shouldn't cause whole job to quit
             logger.warning(e.msg)
+        # notify recipients by email of any other uncaught error, then continue
+        except Exception as e:
+            _notify_error(plugin, e)
 
 
 def export_all_courses_as(plugin):
     """
     Save a gzipped (by default) tar file of all course exports.
     """
-
     plugin_class = CourseExporterPluginManager.get_plugin(plugin)
     store = modulestore()
     course_keys = [course.id for course in store.get_courses()]
