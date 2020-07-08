@@ -7,17 +7,18 @@ import logging
 import boto
 from boto.s3.key import Key
 
-from app_settings import AWS_ID, AWS_KEY
+from app_settings import AWS_ID, AWS_KEY, COURSE_EXPORT_PLUGIN_BUCKET, COURSE_EXPORT_PLUGIN_STORAGE_PREFIX
 
 
 logger = logging.getLogger(__name__)
 
 
-def do_store_s3(tmp_fn, storage_location, bucketname, overwrite=False):
+def do_store_s3(tmp_fn, storage_path):
     """ handle Amazon S3 storage for generated files
     """
     local_path = tmp_fn
-    dest_path = storage_location
+    bucketname = COURSE_EXPORT_PLUGIN_BUCKET
+    dest_path = COURSE_EXPORT_PLUGIN_STORAGE_PREFIX + "/" + storage_path
 
     s3_conn = boto.connect_s3(AWS_ID, AWS_KEY)
     bucket = s3_conn.get_bucket(bucketname)

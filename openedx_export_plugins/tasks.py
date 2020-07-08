@@ -57,10 +57,9 @@ def export_all_courses_as(plugin):
     ).next()
 
     if app_settings.COURSE_EXPORT_PLUGIN_STORAGE_TYPE == 's3':
-        bucketname = app_settings.COURSE_EXPORT_PLUGIN_BUCKET
         fn = os.path.basename(tarf.name)
-        storage_location = '{}/{}'.format(plugin_class.name, fn)
-        storage.do_store_s3(tarf.name, storage_location, bucketname)
+        storage_path = '{}/{}'.format(plugin_class.name, fn)
+        storage.do_store_s3(tarf.name, storage_path)
     # TODO: handle other storage types
 
     # delete the temp file
