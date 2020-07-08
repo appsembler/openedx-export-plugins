@@ -16,10 +16,26 @@ Unreleased
 
 *
 
+[0.2.0] - 2020-07-08
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Added
+_____
+
+* Periodic Celery task to export all courses on schedule with plugins and schedule as configured.
+* Email notification of errors with task, if configured.
+
+Changed
+_______
+
+* Refactor core export code to not require a Request object
+
+
 [0.1.0] - 2019-06-05
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Added
 _____
 
-* First release on PyPI.
+* First release.
+* Markdown exporter plugin.

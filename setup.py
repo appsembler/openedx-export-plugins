@@ -70,7 +70,7 @@ setup(
     long_description=README + '\n\n' + CHANGELOG,
     author='Bryan Wilson',
     author_email='bryan@appsembler.com',
-    url='https://github.com/edx/openedx-export-plugins',
+    url='https://github.com/appsembler/openedx-export-plugins',
     packages=[
         'openedx_export_plugins',
     ],
