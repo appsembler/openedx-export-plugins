@@ -24,7 +24,7 @@ COURSE_EXPORT_PLUGIN_TASK_SCHEDULE = ENV_TOKENS.get("COURSE_EXPORT_PLUGIN_TASK_S
     "day_of_month": "*",
     "month_of_year": "*",
 })
-COURSE_EXPORT_PLUGIN_SCHEDULED_PLUGINS = ENV_TOKENS.get("COURSE_EXPORT_PLUGIN_SCHEDULED_PLUGINS", ("markdown", ))
+COURSE_EXPORT_PLUGIN_SCHEDULED_PLUGINS = ENV_TOKENS.get("COURSE_EXPORT_PLUGIN_SCHEDULED_PLUGINS", ())
 
 # url settings for xsl transformers
 SCHEME = "https://" if settings.HTTPS == "on" else "http://"
