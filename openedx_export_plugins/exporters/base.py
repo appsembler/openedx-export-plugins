@@ -20,6 +20,14 @@ class PluggableCourseExportManager(xml_exporter.CourseExportManager):
     """
 
     @property
+    def name(self):
+        raise NotImplementedError
+
+    @property
+    def http_content_type(self):
+        raise NotImplementedError
+
+    @property
     def filename_extension(self):
         raise NotImplementedError
 

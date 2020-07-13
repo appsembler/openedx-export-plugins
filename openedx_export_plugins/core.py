@@ -4,6 +4,7 @@ Core export functionality.
 
 import datetime
 import io
+import logging
 import os
 import shutil
 import tarfile
@@ -18,6 +19,9 @@ from xmodule.modulestore.django import modulestore
 from student.auth import has_course_author_access
 
 from . import exceptions
+
+
+logger = logging.getLogger(__name__)
 
 
 def export_course_single(user, plugin_class, course_key):
