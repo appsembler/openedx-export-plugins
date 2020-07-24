@@ -2,13 +2,14 @@
 Core export functionality.
 """
 
+import contextlib
 import datetime
 import io
 import logging
 import os
 import shutil
 import tarfile
-from tempfile import mkdtemp
+import tempfile
 
 from django.core.exceptions import PermissionDenied
 
@@ -22,6 +23,16 @@ from . import exceptions
 
 
 logger = logging.getLogger(__name__)
+
+
+# replicate Python 3.2+'s tempfile.TemporaryDirectory for now
+@contextlib.contextmanager
+def TemporaryDirectory():
+    temp_dir = tempfile.mkdtemp()
+    try:
+        yield temp_dir
+    finally:
+        shutil.rmtree(temp_dir)
 
 
 def export_course_single(user, plugin_class, course_key):
@@ -42,27 +53,28 @@ def export_courses_multiple(user, plugin_class, course_keys, outfilename, stream
     """
     if not stream:
         outfilename += ".gz"
-    tarf = os.path.join(mkdtemp(), outfilename)
-    write_method = "w:" if stream else "w:gz"
-    with tarfile.open(tarf, write_method) as out_tar:
-        for course_key in course_keys:
-            if check_author_perms:
-                if not has_course_author_access(user, course_key):
-                    logger.warn('User {} has no access to export {}'.format(user, course_key))
+    with TemporaryDirectory() as tempdir:
+        tarf = os.path.join(tempdir, outfilename)
+        write_method = "w:" if stream else "w:gz"
+        with tarfile.open(tarf, write_method) as out_tar:
+            for course_key in course_keys:
+                if check_author_perms:
+                    if not has_course_author_access(user, course_key):
+                        logger.warn('User {} has no access to export {}'.format(user, course_key))
+                        continue
+                try:
+                    if stream:
+                        for tar_bytes in _course_tar_bytes(user, plugin_class, course_key, out_tar):
+                            yield tar_bytes
+                    else:
+                        output_filepath, out_fn = _do_course_export(plugin_class, course_key)
+                        out_tar.add(output_filepath, out_fn)
+                except exceptions.ExportPluginsCourseExportError:
                     continue
-            try:
-                if stream:
-                    for tar_bytes in _course_tar_bytes(user, plugin_class, course_key, out_tar):
-                        yield tar_bytes
-                else:
-                    output_filepath, out_fn = _do_course_export(plugin_class, course_key)
-                    out_tar.add(output_filepath, out_fn)
-            except exceptions.ExportPluginsCourseExportError:
-                continue
-        if stream:
-            yield _get_tar_end_padding_bytes()
-        else:
-            yield out_tar
+            if stream:
+                yield _get_tar_end_padding_bytes()
+            else:
+                yield out_tar
 
 
 def _get_tar_end_padding_bytes():
@@ -102,21 +114,21 @@ def _do_course_export(plugin_class, course_key):
     """
     Run the actual export transformation.
     """
-    root_dir = mkdtemp()
-    course_key_normalized = str(course_key).replace('/', '+')
-    target_dir = os.path.normpath(course_key_normalized)
-    exporter = plugin_class(modulestore(), contentstore(), course_key, root_dir, target_dir)
-    fn_ext = exporter.filename_extension
-    try:
-        exporter.export()
-    except SerializationError as e:
-        logger.warn('Could not export {} due to core OLX export error {}. Skipping.'.format(course_key, e.message))
-        raise exceptions.ExportPluginsCourseExportError(e.message)
+    with TemporaryDirectory() as root_dir:
+        course_key_normalized = str(course_key).replace('/', '+')
+        target_dir = os.path.normpath(course_key_normalized)
+        exporter = plugin_class(modulestore(), contentstore(), course_key, root_dir, target_dir)
+        fn_ext = exporter.filename_extension
+        try:
+            exporter.export()
+        except SerializationError as e:
+            logger.warn('Could not export {} due to core OLX export error {}. Skipping.'.format(course_key, e.message))
+            raise exceptions.ExportPluginsCourseExportError(e.message)
 
-    output_filepath = os.path.join(root_dir, target_dir, "output.{}".format(fn_ext))
-    out_fn = "{}_{}.{}".format(
-        course_key_normalized,
-        datetime.datetime.now().strftime('%Y-%m-%d'),
-        fn_ext
-    )
-    return (output_filepath, out_fn)
+        output_filepath = os.path.join(root_dir, target_dir, "output.{}".format(fn_ext))
+        out_fn = "{}_{}.{}".format(
+            course_key_normalized,
+            datetime.datetime.now().strftime('%Y-%m-%d'),
+            fn_ext
+        )
+        return (output_filepath, out_fn)
