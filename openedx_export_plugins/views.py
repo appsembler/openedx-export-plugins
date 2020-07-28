@@ -5,6 +5,8 @@ Views for export plugins.
 import datetime
 import logging
 import os
+import shutil
+from tempfile import mkdtemp
 
 from django.contrib.auth.decorators import login_required
 try:
@@ -12,16 +14,16 @@ try:
     from django.core.servers.basehttp import FileWrapper
 except ImportError:
     from wsgiref.util import FileWrapper
-from django.http import HttpResponse, Http404, StreamingHttpResponse
+from django.http import HttpResponse, HttpResponseServerError, Http404, StreamingHttpResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
 
+from util.views import ensure_valid_course_key
 from opaque_keys.edx.keys import CourseKey
 from openedx.core.lib.api import plugins
-from util.views import ensure_valid_course_key
 from xmodule.modulestore.django import modulestore
 
-from . import constants, core
+from . import constants, core, utils
 from .plugins import CourseExporterPluginManager
 
 
@@ -53,8 +55,13 @@ def plugin_export_handler(request, plugin_name, course_key_string=None):
         courses = store.get_courses()
         course_keys = [course.id for course in courses]
 
+    # Don't use a contextmanager or delete the tempdir here.
+    # StreamingHTTPResponse will require tempdir to exist beyond this function's
+    # termination, as the streamed content is generated
+    tempdir = mkdtemp()
+
     if len(course_keys) == 1:
-        (outfilepath, outfn) = core.export_course_single(request.user, plugin_class, course_keys[0])
+        (outfilepath, outfn) = core.export_course_single(request.user, plugin_class, tempdir, course_keys[0])
         with open(outfilepath) as outfile:
             wrapper = FileWrapper(outfile)
             response = HttpResponse(wrapper, content_type='{}; charset=UTF-8'.format(plugin_ctype))
@@ -69,7 +76,7 @@ def plugin_export_handler(request, plugin_name, course_key_string=None):
             datetime.datetime.now().strftime('%Y-%m-%d')
         )
         response = StreamingHttpResponse(
-            core.export_courses_multiple(request.user, plugin_class, course_keys, outfilename, stream=True),
+            core.export_courses_multiple(request.user, plugin_class, course_keys, tempdir, outfilename, stream=True),
             content_type='application/tar'
         )
         response['Content-Disposition'] = 'attachment; filename={}'.format(outfilename)

@@ -13,7 +13,7 @@ from django.core.mail import EmailMessage
 
 from xmodule.modulestore.django import modulestore
 
-from . import app_settings, constants, core, exceptions, storage
+from . import app_settings, constants, core, exceptions, storage, utils
 from .plugins import CourseExporterPluginManager
 
 
@@ -27,11 +27,13 @@ def _notify_error(plugin, error):
     if not dest_addrs:
         return
     subject = "Open edX course export as {} failed".format(plugin)
+    errmsg = error.message or getattr(error, "strerror")
     message = "Course export as {} from {} failed with error: {}".format(
-        plugin, app_settings.LMS_ROOT_URL, error.message
+        plugin, app_settings.LMS_ROOT_URL, errmsg
     )
     mail = EmailMessage(subject, message, to=dest_addrs)
     mail.send()
+    raise error
 
 
 @periodic_task(
@@ -69,16 +71,13 @@ def export_all_courses_as(plugin):
             plugin_class.filename_extension
         )
 
-    tarf = core.export_courses_multiple(
-        None, plugin_class, course_keys, outfilename, check_author_perms=False
-    ).next()
+    with utils.TemporaryDirectory() as tempdir:
+        tarf = core.export_courses_multiple(
+            None, plugin_class, course_keys, tempdir, outfilename, check_author_perms=False
+        ).next()
 
-    if app_settings.COURSE_EXPORT_PLUGIN_STORAGE_TYPE == 's3':
-        fn = os.path.basename(tarf.name)
-        storage_path = '{}/{}'.format(plugin_class.name, fn)
-        storage.do_store_s3(tarf.name, storage_path)
-    # TODO: handle other storage types
-
-    # delete the temp file
-    if os.path.exists(tarf.name):
-        os.remove(tarf.name)
+        if app_settings.COURSE_EXPORT_PLUGIN_STORAGE_TYPE == 's3':
+            fn = os.path.basename(tarf.name)
+            storage_path = '{}/{}'.format(plugin_class.name, fn)
+            storage.do_store_s3(tarf.name, storage_path)
+        # TODO: handle other storage types
