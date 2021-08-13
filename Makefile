@@ -35,20 +35,17 @@ upgrade: ## update the requirements/*.txt files with the latest packages satisfy
 	# Make sure to compile files after any other files they include!
 	pip-compile --upgrade -o requirements/pip-tools.txt requirements/pip-tools.in
 	pip-compile --upgrade -o requirements/base.txt requirements/base.in
-	pip-compile --upgrade -o requirements/test.txt requirements/test.in
-	pip-compile --upgrade -o requirements/doc.txt requirements/doc.in
-	pip-compile --upgrade -o requirements/quality.txt requirements/quality.in
-	pip-compile --upgrade -o requirements/travis.txt requirements/travis.in
+	pip-compile --upgrade -o requirements/travis.txt requirements/travis.in	
 	pip-compile --upgrade -o requirements/dev.txt requirements/dev.in
+	pip-compile --upgrade -o requirements/test.txt requirements/test.in
+	pip-compile --upgrade -o requirements/quality.txt requirements/quality.in
+	pip-compile --upgrade -o requirements/doc.txt requirements/doc.in
 	# Let tox control the Django version for tests
 	sed '/^[dD]jango==/d' requirements/test.txt > requirements/test.tmp
 	mv requirements/test.tmp requirements/test.txt
 
 quality: ## check coding style with pycodestyle and pylint
 	tox -e quality
-
-pii_check: ## check for PII annotations on all Django models
-	tox -e pii_check
 
 requirements: ## install development environment requirements
 	pip install -qr requirements/pip-tools.txt
