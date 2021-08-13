@@ -87,14 +87,15 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Apache Software License',
         'Natural Language :: English',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
             'Programming Language :: Python :: 3.6',
     ],
     entry_points={
         'openedx.exporters.course': [
             'markdown = openedx_export_plugins.exporters.markdown:MarkdownCourseExportManager'
+        ],
+        "cms.djangoapp": [
+            "openedx_export_plugins = openedx_export_plugins.apps:OpenedxExportPluginsConfig",
         ]
     }
 )

@@ -2,10 +2,9 @@
 """
 openedx_export_plugins Django application initialization.
 """
-
-
-
 from django.apps import AppConfig
+
+from openedx.core.djangoapps.plugins.constants import PluginURLs, ProjectType
 
 
 class OpenedxExportPluginsConfig(AppConfig):
@@ -14,3 +13,12 @@ class OpenedxExportPluginsConfig(AppConfig):
     """
 
     name = 'openedx_export_plugins'
+    plugin_app = {
+        PluginURLs.CONFIG: {
+            ProjectType.CMS: {
+                PluginURLs.NAMESPACE: 'openedx_export_plugins',
+                PluginURLs.REGEX: 'api/courseware/',
+                PluginURLs.RELATIVE_PATH: 'urls',
+            }
+        },
+    }
