@@ -83,8 +83,8 @@ class ExportFSPolicyTabsJSONResolver(ExportFSResolver):
                 try:
                     # we only care about tabs that have a url_name and aren't course staff only
                     policy_tabs = policy_json['course/course']['tabs']
-                    print policy_tabs
-                    tabs = [tab for tab in policy_tabs if 'url_slug' in tab.keys() and not tab['course_staff_only']]
+                    print(policy_tabs)
+                    tabs = [tab for tab in policy_tabs if 'url_slug' in list(tab.keys()) and not tab['course_staff_only']]
                 except KeyError:
                     return self.resolve_empty(context)
                 if tabs:
@@ -94,8 +94,8 @@ class ExportFSPolicyTabsJSONResolver(ExportFSResolver):
                     for tab in tabs:
                         # docs_xsl += "<xsl:apply-templates select=\"document('tmpfs:tabs/{}.html')\"/>".format(tab['url_slug'])
                         with open(os.path.join(self.fs.getsyspath('tabs'), '{}.html'.format(tab['url_slug']))) as html:
-                            tabs_xml += u"\n<h2>{}</h2>".format(tab['name']) + '\n' + html.read().decode('utf-8') + "<hr/>"
-                    return self.resolve_string(u"<xml>{}</xml>".format(tabs_xml), context)
+                            tabs_xml += "\n<h2>{}</h2>".format(tab['name']) + '\n' + html.read().decode('utf-8') + "<hr/>"
+                    return self.resolve_string("<xml>{}</xml>".format(tabs_xml), context)
                 else:
                     return self.resolve_empty(context)
         else:
@@ -121,7 +121,7 @@ class ExportFSUpdatesJSONResolver(ExportFSResolver):
                         if update['status'] == 'visible':
                             updates_xml += "<h4>{}</h4>".format(update['date'])
                             updates_xml += update['content']
-                    return self.resolve_string(u"<xml>{}</xml>".format(updates_xml), context)
+                    return self.resolve_string("<xml>{}</xml>".format(updates_xml), context)
                 else:
                     return self.resolve_empty(context)
         else:
@@ -142,7 +142,7 @@ class AssetURLResolver(ExportFSResolver):
                 assets = json.load(f)
                 try:
                     asset_url = assets[asset_id]['filename']
-                    return self.resolve_string(u"<xml>{}</xml>".format(asset_url), context)
+                    return self.resolve_string("<xml>{}</xml>".format(asset_url), context)
                 except KeyError:
                     return self.resolve_empty(context)
         else:

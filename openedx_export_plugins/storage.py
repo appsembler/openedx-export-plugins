@@ -7,7 +7,7 @@ import logging
 import boto
 from boto.s3.key import Key
 
-from app_settings import AWS_ID, AWS_KEY, COURSE_EXPORT_PLUGIN_BUCKET, COURSE_EXPORT_PLUGIN_STORAGE_PREFIX
+from .app_settings import AWS_ID, AWS_KEY, COURSE_EXPORT_PLUGIN_BUCKET, COURSE_EXPORT_PLUGIN_STORAGE_PREFIX
 
 
 logger = logging.getLogger(__name__)

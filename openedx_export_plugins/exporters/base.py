@@ -81,5 +81,5 @@ class PluggableCourseExportManager(xml_exporter.CourseExportManager):
         transform = etree.XSLT(xslt_root)
         dt = datetime.datetime.now()
         result_tree = transform(root, baseURL="'{}'".format(app_settings.LMS_ROOT_URL), curDateTime="'{}'".format(dt))
-        print(str(result_tree))
+        print((str(result_tree)))
         return result_tree

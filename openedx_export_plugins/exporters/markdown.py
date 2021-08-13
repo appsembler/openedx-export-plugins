@@ -83,7 +83,7 @@ class ExportFSAssetsFileResolver(resolvers.ExportFSResolver):
                 'text/html': 'Code',
                 'text/css': 'Code',
             }
-            if 'contentType' in obj.keys():
+            if 'contentType' in list(obj.keys()):
                 try:
                     supertype = TYPE_LOOKUP[obj['contentType']]
                 except KeyError:
@@ -95,15 +95,15 @@ class ExportFSAssetsFileResolver(resolvers.ExportFSResolver):
         def sorted_by_type(assets):
             new_dict = dict(Images=[], Documents=[], Code=[], Other=[])
 
-            for key, val in assets.items():
+            for key, val in list(assets.items()):
                 new_dict[val['supertype']].append(val['name'])
 
             ret_str = ""
             # TODO: this resolver doesn't have to be markdown-specific
             # if we can make the return string more generic
-            for key in new_dict.keys():
-                ret_str += u"\n\n#### {}\n* ".format(key)
-                ret_str += u"\n* ".join(sorted(new_dict[key]))
+            for key in list(new_dict.keys()):
+                ret_str += "\n\n#### {}\n* ".format(key)
+                ret_str += "\n* ".join(sorted(new_dict[key]))
             return ret_str
 
         path = self.fs.getsyspath(url.replace('assets:', '', 1))
@@ -111,6 +111,6 @@ class ExportFSAssetsFileResolver(resolvers.ExportFSResolver):
             with open(path) as f:
                 assets = json.load(f, object_hook=asset_object_hook)
                 assets_str = sorted_by_type(assets)
-                return self.resolve_string(u"<xml><![CDATA[{}]]></xml>".format(assets_str), context)
+                return self.resolve_string("<xml><![CDATA[{}]]></xml>".format(assets_str), context)
         else:
             return self.resolve_empty(context)

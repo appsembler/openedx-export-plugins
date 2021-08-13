@@ -4,7 +4,7 @@
 """
 Package metadata for openedx_export_plugins.
 """
-from __future__ import absolute_import, print_function
+
 
 import os
 import re
@@ -56,7 +56,7 @@ VERSION = get_version('openedx_export_plugins', '__init__.py')
 
 if sys.argv[-1] == 'tag':
     print("Tagging the version on github:")
-    os.system(u"git tag -a %s -m 'version %s'" % (VERSION, VERSION))
+    os.system("git tag -a %s -m 'version %s'" % (VERSION, VERSION))
     os.system("git push --tags")
     sys.exit()
 
