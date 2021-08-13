@@ -84,7 +84,7 @@ class ExportFSPolicyTabsJSONResolver(ExportFSResolver):
                     # we only care about tabs that have a url_name and aren't course staff only
                     policy_tabs = policy_json['course/course']['tabs']
                     print(policy_tabs)
-                    tabs = [tab for tab in policy_tabs if 'url_slug' in list(tab.keys()) and not tab['course_staff_only']]
+                    tabs = [tab for tab in policy_tabs if 'url_slug' in tab and not tab['course_staff_only']]
                 except KeyError:
                     return self.resolve_empty(context)
                 if tabs:

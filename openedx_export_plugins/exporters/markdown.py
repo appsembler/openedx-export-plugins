@@ -83,7 +83,7 @@ class ExportFSAssetsFileResolver(resolvers.ExportFSResolver):
                 'text/html': 'Code',
                 'text/css': 'Code',
             }
-            if 'contentType' in list(obj.keys()):
+            if 'contentType' in obj:
                 try:
                     supertype = TYPE_LOOKUP[obj['contentType']]
                 except KeyError:
@@ -95,13 +95,13 @@ class ExportFSAssetsFileResolver(resolvers.ExportFSResolver):
         def sorted_by_type(assets):
             new_dict = dict(Images=[], Documents=[], Code=[], Other=[])
 
-            for key, val in list(assets.items()):
+            for key, val in assets.items():
                 new_dict[val['supertype']].append(val['name'])
 
             ret_str = ""
             # TODO: this resolver doesn't have to be markdown-specific
             # if we can make the return string more generic
-            for key in list(new_dict.keys()):
+            for key in new_dict:
                 ret_str += "\n\n#### {}\n* ".format(key)
                 ret_str += "\n* ".join(sorted(new_dict[key]))
             return ret_str
