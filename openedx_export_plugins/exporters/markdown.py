@@ -43,7 +43,7 @@ class MarkdownCourseExportManager(base.PluggableCourseExportManager):
         """
         Perform XSLT transform of export output using XSL stylesheet.
         """
-        parser = etree.XMLParser(recover=True)  # use a forgiving parser, OLX is messy
+        parser = etree.XMLParser(recover=True, encoding='utf-8')  # use a forgiving parser, OLX is messy
         parser.resolvers.add(resolvers.ExportFSResolver(export_fs))
         parser.resolvers.add(resolvers.PyLocalXSLResolver())
         parser.resolvers.add(ExportFSAssetsFileResolver(export_fs))
