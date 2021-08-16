@@ -83,7 +83,7 @@ def _course_tar_bytes(user, plugin_class, tempdir, course_key, out_tar):
 
         # replicating behavior of TarFile.add
         tar_data = io.BytesIO()
-        with open(src_file_path, "r") as src:
+        with open(src_file_path, "rb") as src:
             shutil.copyfileobj(src, tar_data, length=tarinfo.size)
             blocks, remainder = divmod(tarinfo.size, tarfile.BLOCKSIZE)
             if remainder > 0:
