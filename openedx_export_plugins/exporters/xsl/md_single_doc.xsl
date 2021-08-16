@@ -197,8 +197,6 @@ date: Course exported from <xsl:value-of select="$baseURL" /> at <xsl:value-of s
 <!-- don't output scripts used in answer eval -->
 <xsl:template match="problem//script|answer[@type='loncapa/python']" />
 
-<xsl:template 
-
 <xsl:template name="updates" mode="markdown">
 <xsl:text>----
 
