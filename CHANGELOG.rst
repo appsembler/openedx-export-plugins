@@ -16,6 +16,22 @@ Unreleased
 
 *
 
+[1.0.0] - 2021-08-16
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Added
+_____
+
+* Entry point and Django app setup as cms.djangoapp
+
+Changed
+_______
+
+* Refactor to use Python3 and for Juniper compatibility.  
+* Backwards incompatible to Py2.7, Ironwood release or below.
+
+
+
 [0.2.2] - 2020-07-27
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
