@@ -17,7 +17,6 @@ class OpenedxExportPluginsConfig(AppConfig):
         PluginURLs.CONFIG: {
             ProjectType.CMS: {
                 PluginURLs.NAMESPACE: 'openedx_export_plugins',
-                PluginURLs.RELATIVE_PATH: 'urls',
             }
         },
     }

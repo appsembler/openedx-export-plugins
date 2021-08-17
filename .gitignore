@@ -68,6 +68,9 @@ docs/modules.rst
 docs/openedx_export_plugins.rst
 docs/openedx_export_plugins.*.rst
 
+# Requirements .txt files
+requirements/*.txt
+
 # Private requirements
 requirements/private.in
 requirements/private.txt
