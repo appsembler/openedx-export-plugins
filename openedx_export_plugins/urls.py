@@ -11,7 +11,7 @@ from openedx_export_plugins import views
 
 urlpatterns = [
     url(r'^export/{}/(?P<plugin_name>.*)$'.format(settings.COURSE_KEY_PATTERN),
-        views.plugin_export_handler),
+        views.plugin_export_handler, name='plugin_export_handler'),
     url(r'^export/all/(?P<plugin_name>.*)$',
         views.plugin_export_handler)
 ]
