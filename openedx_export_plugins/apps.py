@@ -2,10 +2,9 @@
 """
 openedx_export_plugins Django application initialization.
 """
-
-from __future__ import absolute_import, unicode_literals
-
 from django.apps import AppConfig
+
+from openedx.core.djangoapps.plugins.constants import PluginURLs, ProjectType
 
 
 class OpenedxExportPluginsConfig(AppConfig):
@@ -14,3 +13,10 @@ class OpenedxExportPluginsConfig(AppConfig):
     """
 
     name = 'openedx_export_plugins'
+    plugin_app = {
+        PluginURLs.CONFIG: {
+            ProjectType.CMS: {
+                PluginURLs.NAMESPACE: 'openedx_export_plugins',
+            }
+        },
+    }

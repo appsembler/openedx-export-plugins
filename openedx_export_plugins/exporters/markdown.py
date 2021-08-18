@@ -51,11 +51,11 @@ class MarkdownCourseExportManager(base.PluggableCourseExportManager):
         parser.resolvers.add(resolvers.AssetURLResolver(export_fs))
         parser.resolvers.add(resolvers.ExportFSUpdatesJSONResolver(export_fs))
 
-        xsl_sheet = self._load_export_xsl()
+        xsl_sheet = bytes(self._load_export_xsl(), 'utf-8')
         xslt_root = etree.XML(xsl_sheet, parser)
         transform = etree.XSLT(xslt_root)
         dt = datetime.datetime.now()
-        course_id = export_fs.sub_dir.replace('/', '')
+        course_id = export_fs._sub_dir.replace('/', '')
         result_tree = transform(
             root, baseURL="'{}/'".format(app_settings.LMS_ROOT_URL),
             curDateTime="'{}'".format(dt), courseID="'{}'".format(course_id)
@@ -83,7 +83,7 @@ class ExportFSAssetsFileResolver(resolvers.ExportFSResolver):
                 'text/html': 'Code',
                 'text/css': 'Code',
             }
-            if 'contentType' in obj.keys():
+            if 'contentType' in obj:
                 try:
                     supertype = TYPE_LOOKUP[obj['contentType']]
                 except KeyError:
@@ -101,9 +101,9 @@ class ExportFSAssetsFileResolver(resolvers.ExportFSResolver):
             ret_str = ""
             # TODO: this resolver doesn't have to be markdown-specific
             # if we can make the return string more generic
-            for key in new_dict.keys():
-                ret_str += u"\n\n#### {}\n* ".format(key)
-                ret_str += u"\n* ".join(sorted(new_dict[key]))
+            for key in new_dict:
+                ret_str += "\n\n#### {}\n* ".format(key)
+                ret_str += "\n* ".join(sorted(new_dict[key]))
             return ret_str
 
         path = self.fs.getsyspath(url.replace('assets:', '', 1))
@@ -111,6 +111,6 @@ class ExportFSAssetsFileResolver(resolvers.ExportFSResolver):
             with open(path) as f:
                 assets = json.load(f, object_hook=asset_object_hook)
                 assets_str = sorted_by_type(assets)
-                return self.resolve_string(u"<xml><![CDATA[{}]]></xml>".format(assets_str), context)
+                return self.resolve_string("<xml><![CDATA[{}]]></xml>".format(assets_str), context)
         else:
             return self.resolve_empty(context)

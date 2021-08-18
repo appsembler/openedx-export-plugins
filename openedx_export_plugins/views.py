@@ -5,7 +5,6 @@ Views for export plugins.
 import datetime
 import logging
 import os
-import shutil
 from tempfile import mkdtemp
 
 from django.contrib.auth.decorators import login_required
@@ -20,10 +19,10 @@ from django.views.decorators.http import require_http_methods
 
 from util.views import ensure_valid_course_key
 from opaque_keys.edx.keys import CourseKey
-from openedx.core.lib.api import plugins
+from openedx.core.lib import plugins
 from xmodule.modulestore.django import modulestore
 
-from . import constants, core, utils
+from . import constants, core
 from .plugins import CourseExporterPluginManager
 
 

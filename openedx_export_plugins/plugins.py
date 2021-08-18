@@ -1,7 +1,7 @@
 """
 Plugins for course, library, and block export
 """
-from openedx.core.lib.api.plugins import PluginManager
+from openedx.core.lib.plugins import PluginManager
 
 
 # Stevedore extension point namespaces

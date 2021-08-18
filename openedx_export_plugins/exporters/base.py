@@ -76,10 +76,10 @@ class PluggableCourseExportManager(xml_exporter.CourseExportManager):
         parser.resolvers.add(resolvers.ExportFSResolver(export_fs))
         parser.resolvers.add(resolvers.PyLocalXSLResolver())
         parser.resolvers.add(resolvers.AssetURLResolver(export_fs))
-        xsl_sheet = self._load_export_xsl()
+        xsl_sheet = bytes(self._load_export_xsl(), 'utf-8')
         xslt_root = etree.XML(xsl_sheet, parser)
         transform = etree.XSLT(xslt_root)
         dt = datetime.datetime.now()
         result_tree = transform(root, baseURL="'{}'".format(app_settings.LMS_ROOT_URL), curDateTime="'{}'".format(dt))
-        print(str(result_tree))
+        print((str(result_tree)))
         return result_tree

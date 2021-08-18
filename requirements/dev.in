@@ -2,8 +2,8 @@
 -c constraints.txt
 
 -r pip-tools.txt          # pip-tools and its dependencies, for managing requirements files
--r quality.txt            # Core and quality check dependencies
+# circular dependencies here -r quality.txt            # Core and quality check dependencies
 -r travis.txt             # tox and related dependencies
 
 diff-cover                # Changeset diff test coverage
-edx-i18n-tools            # For i18n_tool dummy
+edx-i18n-tools<0.7        # For i18n_tool dummy.  Version for Django 2.2 compat

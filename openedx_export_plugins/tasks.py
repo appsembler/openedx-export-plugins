@@ -72,9 +72,9 @@ def export_all_courses_as(plugin):
         )
 
     with utils.TemporaryDirectory() as tempdir:
-        tarf = core.export_courses_multiple(
+        tarf = next(core.export_courses_multiple(
             None, plugin_class, course_keys, tempdir, outfilename, check_author_perms=False
-        ).next()
+        ))
 
         if app_settings.COURSE_EXPORT_PLUGIN_STORAGE_TYPE == 's3':
             fn = os.path.basename(tarf.name)
